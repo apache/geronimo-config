@@ -19,7 +19,7 @@
 
 ## Status
 
-Microprofile proposal!
+Implementation of the MicroProfile Config Specification Proposal.
 
 == Rational
 
@@ -39,7 +39,7 @@ Romain Manni-Bucau (Apache/Tomitribe), Ron Smeral (JBoss) and Anatole Tresch als
 
 == How it works
 
-A 'Configuration' consists of the information collected from the registered `javax.config.spi.ConfigSource` s.
+A 'Configuration' consists of the information collected from the registered `ConfigSource` s.
 These `ConfigSource`s get sorted according to their _ordinal_.
 That way it is possible to overwrite configuration with lower importance from outside.
 
@@ -61,4 +61,20 @@ An example would be a ConfigSource which gets the configured values from a share
 
 `$> mvn clean install`
 
-After that the specification PDF can be found in `spec/target/generated-docs/microprofile-config-spec.pdf`
+== Config API
+
+The MicroProfile Config API and further information can be found at
+
+https://github.com/eclipse/microprofile-config/
+
+The API is also available as Maven Artifact
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.eclipse.microprofile.apis</groupId>
+    <artifactId>microprofile-config_1.0_api</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+----
+
