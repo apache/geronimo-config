@@ -30,10 +30,6 @@
     <groupId>org.apache.geronimo.config</groupId>
     <artifactId>config-impl</artifactId>
 
-    <properties>
-        <arquillian.version>1.1.13.Final</arquillian.version>
-    </properties>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -106,10 +102,6 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-
-            <properties>
-                <owb.version>1.7.3-SNAPSHOT</owb.version>
-            </properties>
 
             <dependencies>
                 <dependency>

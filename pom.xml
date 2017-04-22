@@ -47,6 +47,9 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+
+        <owb.version>1.7.3</owb.version>
+        <arquillian.version>1.1.13.Final</arquillian.version>
     </properties>
 
     <repositories>
