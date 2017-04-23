@@ -28,7 +28,7 @@
     </parent>
 
     <groupId>org.apache.geronimo.config</groupId>
-    <artifactId>config-impl</artifactId>
+    <artifactId>geronimo-config-impl</artifactId>
 
     <dependencyManagement>
         <dependencies>
