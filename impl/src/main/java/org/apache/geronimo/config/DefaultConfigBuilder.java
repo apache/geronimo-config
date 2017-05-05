@@ -105,6 +105,9 @@ public class DefaultConfigBuilder implements ConfigBuilder {
                             .forEach(configSource -> configSources.add(configSource)));
         }
 
+        ServiceLoader<Converter> converterLoader = ServiceLoader.load(Converter.class, forClassLoader);
+        converterLoader.forEach(converter -> converters.add(converter));
+
         ConfigImpl config = new ConfigImpl();
         config.addConfigSources(configSources);
 
