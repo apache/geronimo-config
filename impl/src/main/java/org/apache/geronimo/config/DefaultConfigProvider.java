@@ -55,7 +55,11 @@ public class DefaultConfigProvider extends ConfigProviderResolver {
             synchronized (DefaultConfigProvider.class) {
                 config = existingConfig(forClassLoader);
                 if (config == null) {
-                    config = getBuilder().forClassLoader(forClassLoader).addDefaultSources().addDiscoveredSources().build();
+                    config = getBuilder().forClassLoader(forClassLoader)
+                            .addDefaultSources()
+                            .addDiscoveredSources()
+                            .addDiscoveredConverters()
+                            .build();
                     registerConfig(config, forClassLoader);
                 }
             }

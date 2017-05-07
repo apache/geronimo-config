@@ -47,6 +47,7 @@ public class DefaultConfigBuilder implements ConfigBuilder {
     private final List<Converter<?>> converters = new ArrayList<>();
     private boolean ignoreDefaultSources = true;
     private boolean ignoreDiscoveredSources = true;
+    private boolean ignoreDiscoveredConverters = true;
 
     @Override
     public ConfigBuilder addDefaultSources() {
@@ -79,6 +80,12 @@ public class DefaultConfigBuilder implements ConfigBuilder {
     }
 
     @Override
+    public ConfigBuilder addDiscoveredConverters() {
+        ignoreDiscoveredConverters = false;
+        return this;
+    }
+
+    @Override
     public Config build() {
         List<ConfigSource> configSources = new ArrayList<>();
          if (forClassLoader == null) {
@@ -105,8 +112,10 @@ public class DefaultConfigBuilder implements ConfigBuilder {
                             .forEach(configSource -> configSources.add(configSource)));
         }
 
-        ServiceLoader<Converter> converterLoader = ServiceLoader.load(Converter.class, forClassLoader);
-        converterLoader.forEach(converter -> converters.add(converter));
+        if (!ignoreDiscoveredConverters) {
+            ServiceLoader<Converter> converterLoader = ServiceLoader.load(Converter.class, forClassLoader);
+            converterLoader.forEach(converter -> converters.add(converter));
+        }
 
         ConfigImpl config = new ConfigImpl();
         config.addConfigSources(configSources);
