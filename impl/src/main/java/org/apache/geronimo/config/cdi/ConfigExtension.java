@@ -44,7 +44,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>
  */
 public class ConfigExtension implements Extension {
-
+    private static final String DEFAULT_UNCONFIGURED_VALUE = "org.eclipse.microprofile.config.configproperty.unconfigureddvalue";
     private Config config;
 
     private Set<InjectionPoint> injectionPoints = new HashSet<>();
@@ -81,7 +81,8 @@ public class ConfigExtension implements Extension {
                 // a direct injection of a ConfigProperty
                 // that means a Converter must exist.
                 String key = ConfigInjectionBean.getConfigKey(injectionPoint, configProperty);
-                if ((configProperty.defaultValue() == null || configProperty.defaultValue().length() == 0)
+                if ((configProperty.defaultValue() == null || configProperty.defaultValue().length() == 0
+                        || configProperty.defaultValue().equals(DEFAULT_UNCONFIGURED_VALUE))
                         && !config.getOptionalValue(key, (Class) type).isPresent()) {
                     deploymentProblems.add("No Config Value exists for " + key);
                 }
