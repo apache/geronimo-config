@@ -130,7 +130,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         }
         else {
             Class clazz = (Class) annotated.getBaseType();
-            if (defaultValue == null || defaultValue.length() == 0) {
+            if (ConfigExtension.isDefaultUnset(defaultValue)) {
                 return (T) getConfig().getValue(key, clazz);
             }
             else {

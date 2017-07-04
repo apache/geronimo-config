@@ -103,18 +103,18 @@ public class DefaultConfigBuilder implements ConfigBuilder {
         if (!ignoreDiscoveredSources) {
             // load all ConfigSource services
             ServiceLoader<ConfigSource> configSourceLoader = ServiceLoader.load(ConfigSource.class, forClassLoader);
-            configSourceLoader.forEach(configSource -> configSources.add(configSource));
+            configSourceLoader.forEach(configSources::add);
 
             // load all ConfigSources from ConfigSourceProviders
             ServiceLoader<ConfigSourceProvider> configSourceProviderLoader = ServiceLoader.load(ConfigSourceProvider.class, forClassLoader);
             configSourceProviderLoader.forEach(configSourceProvider ->
                     configSourceProvider.getConfigSources(forClassLoader)
-                            .forEach(configSource -> configSources.add(configSource)));
+                            .forEach(configSources::add));
         }
 
         if (!ignoreDiscoveredConverters) {
             ServiceLoader<Converter> converterLoader = ServiceLoader.load(Converter.class, forClassLoader);
-            converterLoader.forEach(converter -> converters.add(converter));
+            converterLoader.forEach(converters::add);
         }
 
         ConfigImpl config = new ConfigImpl();

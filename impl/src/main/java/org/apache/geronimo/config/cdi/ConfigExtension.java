@@ -81,8 +81,7 @@ public class ConfigExtension implements Extension {
                 // a direct injection of a ConfigProperty
                 // that means a Converter must exist.
                 String key = ConfigInjectionBean.getConfigKey(injectionPoint, configProperty);
-                if ((configProperty.defaultValue() == null || configProperty.defaultValue().length() == 0
-                        || configProperty.defaultValue().equals(DEFAULT_UNCONFIGURED_VALUE))
+                if ((isDefaultUnset(configProperty.defaultValue()))
                         && !config.getOptionalValue(key, (Class) type).isPresent()) {
                     deploymentProblems.add("No Config Value exists for " + key);
                 }
@@ -101,4 +100,7 @@ public class ConfigExtension implements Extension {
     }
 
 
+    static boolean isDefaultUnset(String defaultValue) {
+        return defaultValue == null || defaultValue.length() == 0 || defaultValue.equals(DEFAULT_UNCONFIGURED_VALUE);
+    }
 }
