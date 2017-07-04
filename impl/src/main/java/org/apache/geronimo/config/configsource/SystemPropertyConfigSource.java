@@ -18,12 +18,14 @@
  */
 package org.apache.geronimo.config.configsource;
 
-import java.util.Map;
+import org.eclipse.microprofile.config.spi.ConfigSource;
 
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
+import java.util.Map;
 
-import org.eclipse.microprofile.config.spi.ConfigSource;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * {@link ConfigSource} which uses {@link System#getProperties()}
@@ -33,18 +35,23 @@ import org.eclipse.microprofile.config.spi.ConfigSource;
 @Typed
 @Vetoed
 public class SystemPropertyConfigSource extends BaseConfigSource {
+    private final Map<String, String> instance;
+
     public SystemPropertyConfigSource() {
         initOrdinal(400);
+        instance = "true".equalsIgnoreCase(getValue("org.apache.geronimo.config.configsource.SystemPropertyConfigSource.copy")) ?
+                System.getProperties().stringPropertyNames().stream().collect(toMap(identity(), System::getProperty)) :
+                Map.class.cast(System.getProperties());
     }
 
     @Override
     public Map<String, String> getProperties() {
-        return (Map) System.getProperties();
+        return instance;
     }
 
     @Override
     public String getValue(String key) {
-        return System.getProperty(key);
+        return instance.get(key);
     }
 
     @Override
