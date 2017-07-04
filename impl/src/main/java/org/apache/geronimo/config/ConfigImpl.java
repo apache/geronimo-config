@@ -97,7 +97,7 @@ public class ConfigImpl implements Config {
     @Override
     public <T> T getValue(String propertyName, Class<T> propertyType) {
         String value = getValue(propertyName);
-        if (value == null || value.length() == 0) {
+        if (value == null || value.isEmpty()) {
             throw new NoSuchElementException("No configured value found for config key " + propertyName);
         }
 
