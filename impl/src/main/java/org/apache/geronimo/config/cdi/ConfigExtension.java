@@ -44,7 +44,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>
  */
 public class ConfigExtension implements Extension {
-    private static final String DEFAULT_UNCONFIGURED_VALUE = "org.eclipse.microprofile.config.configproperty.unconfigureddvalue";
     private Config config;
 
     private Set<InjectionPoint> injectionPoints = new HashSet<>();
@@ -101,6 +100,6 @@ public class ConfigExtension implements Extension {
 
 
     static boolean isDefaultUnset(String defaultValue) {
-        return defaultValue == null || defaultValue.length() == 0 || defaultValue.equals(DEFAULT_UNCONFIGURED_VALUE);
+        return defaultValue == null || defaultValue.length() == 0 || defaultValue.equals(ConfigProperty.UNCONFIGURED_VALUE);
     }
 }
