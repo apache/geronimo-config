@@ -101,6 +101,10 @@
                         <INSTANCE>value-for-tck-since-we-ignore-empty</INSTANCE>
                         <UPSTART_INSTANCE>value-for-tck-since-we-ignore-empty</UPSTART_INSTANCE>
                     </environmentVariables>
+                    <systemPropertyVariables>
+                        <!-- TCKs assume it but this is not really a good option for prod -->
+                        <org.apache.geronimo.config.configsource.SystemPropertyConfigSource.copy>false</org.apache.geronimo.config.configsource.SystemPropertyConfigSource.copy>
+                    </systemPropertyVariables>
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>
                     <trimStackTrace>false</trimStackTrace>

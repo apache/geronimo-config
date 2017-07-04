@@ -38,10 +38,10 @@ public class SystemPropertyConfigSource extends BaseConfigSource {
     private final Map<String, String> instance;
 
     public SystemPropertyConfigSource() {
-        initOrdinal(400);
-        instance = "true".equalsIgnoreCase(getValue("org.apache.geronimo.config.configsource.SystemPropertyConfigSource.copy")) ?
+        instance = "true".equalsIgnoreCase(System.getProperty("org.apache.geronimo.config.configsource.SystemPropertyConfigSource.copy", "true")) ?
                 System.getProperties().stringPropertyNames().stream().collect(toMap(identity(), System::getProperty)) :
                 Map.class.cast(System.getProperties());
+        initOrdinal(400);
     }
 
     @Override
