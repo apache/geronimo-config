@@ -44,7 +44,7 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-
+        <microprofile-config.version>1.0-SNAPSHOT</microprofile-config.version>
         <owb.version>1.7.4-SNAPSHOT</owb.version>
         <arquillian.version>1.1.13.Final</arquillian.version>
     </properties>
@@ -55,6 +55,12 @@
             <releases><enabled>false</enabled></releases>
             <snapshots><enabled>true</enabled></snapshots>
             <url>https://repo.eclipse.org/content/groups/microprofile/</url>
+        </repository>
+        <repository>
+            <id>microprofile-releases</id>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+            <url>https://repo.eclipse.org/content/repositories/microprofile-releases</url>
         </repository>
     </repositories>
 
