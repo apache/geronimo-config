@@ -19,9 +19,12 @@ package org.apache.geronimo.config;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,19 +38,22 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.geronimo.config.converters.BooleanConverter;
+import org.apache.geronimo.config.converters.DoubleConverter;
 import org.apache.geronimo.config.converters.DurationConverter;
+import org.apache.geronimo.config.converters.FloatConverter;
+import org.apache.geronimo.config.converters.InstantConverter;
+import org.apache.geronimo.config.converters.IntegerConverter;
 import org.apache.geronimo.config.converters.LocalDateConverter;
 import org.apache.geronimo.config.converters.LocalDateTimeConverter;
 import org.apache.geronimo.config.converters.LocalTimeConverter;
+import org.apache.geronimo.config.converters.LongConverter;
+import org.apache.geronimo.config.converters.OffsetDateTimeConverter;
+import org.apache.geronimo.config.converters.OffsetTimeConverter;
 import org.apache.geronimo.config.converters.StringConverter;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.eclipse.microprofile.config.spi.Converter;
-import org.apache.geronimo.config.converters.BooleanConverter;
-import org.apache.geronimo.config.converters.DoubleConverter;
-import org.apache.geronimo.config.converters.FloatConverter;
-import org.apache.geronimo.config.converters.IntegerConverter;
-import org.apache.geronimo.config.converters.LongConverter;
 
 import javax.annotation.Priority;
 import javax.enterprise.inject.Typed;
@@ -81,6 +87,9 @@ public class ConfigImpl implements Config {
         converters.put(LocalTime.class, LocalTimeConverter.INSTANCE);
         converters.put(LocalDate.class, LocalDateConverter.INSTANCE);
         converters.put(LocalDateTime.class, LocalDateTimeConverter.INSTANCE);
+        converters.put(OffsetTime.class, OffsetTimeConverter.INSTANCE);
+        converters.put(OffsetDateTime.class, OffsetDateTimeConverter.INSTANCE);
+        converters.put(Instant.class, InstantConverter.INSTANCE);
     }
 
 
