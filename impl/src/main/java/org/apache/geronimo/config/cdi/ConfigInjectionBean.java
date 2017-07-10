@@ -44,12 +44,18 @@ public abstract class ConfigInjectionBean<T> implements Bean<T>, PassivationCapa
     private final Class rawType;
     private final Set<Type> types;
     private final String id;
+    private final boolean alternative;
 
     ConfigInjectionBean(Type type) {
+        this(type,false);
+    }
+
+    ConfigInjectionBean(Type type, boolean alternative) {
         this.types = new HashSet<>();
         this.types.add(type);
         this.rawType = getRawType(type);
         this.id = "ConfigInjectionBean_" + type.toString();
+        this.alternative = alternative;
     }
 
     private Class getRawType(Type type) {
@@ -112,7 +118,7 @@ public abstract class ConfigInjectionBean<T> implements Bean<T>, PassivationCapa
 
     @Override
     public boolean isAlternative() {
-        return true;
+        return alternative;
     }
 
     @Override

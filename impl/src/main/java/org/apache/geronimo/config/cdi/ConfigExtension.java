@@ -147,7 +147,7 @@ public class ConfigExtension implements Extension {
                                 return Stream.empty();
                             }
                             final Class<?> providerType = Class.class.cast(paramType.getActualTypeArguments()[0]);
-                            return Stream.of(new ConfigInjectionBean<Provider<?>>(injection.type) {
+                            return Stream.of(new ConfigInjectionBean<Provider<?>>(injection.type, true) {
                                 @Override
                                 public Provider<?> create(final CreationalContext<Provider<?>> context) {
                                     return () -> config.getValue(keyProvider.apply(context), providerType);
@@ -215,7 +215,7 @@ public class ConfigExtension implements Extension {
                         // and not sure it would be done this way anyway
                         final ParameterizedTypeImpl providerType = new ParameterizedTypeImpl(Provider.class, injection.type);
                         if (injections.stream().noneMatch(i -> i.type.equals(providerType))) {
-                            beans.add(new ConfigInjectionBean<Provider<?>>(providerType) {
+                            beans.add(new ConfigInjectionBean<Provider<?>>(providerType, true) {
                                 @Override
                                 public Provider<?> create(final CreationalContext<Provider<?>> context) {
                                     return () -> bean.create(context);
