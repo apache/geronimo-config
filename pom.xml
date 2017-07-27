@@ -37,14 +37,13 @@
             <name>Apache License, Version 2.0</name>
             <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
             <distribution>repo</distribution>
-            <comments>A business-friendly OSS license</comments>
         </license>
     </licenses>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <microprofile-config.version>1.0-SNAPSHOT</microprofile-config.version>
+        <microprofile-config.version>1.0</microprofile-config.version>
         <owb.version>1.7.3</owb.version>
         <arquillian.version>1.1.13.Final</arquillian.version>
     </properties>

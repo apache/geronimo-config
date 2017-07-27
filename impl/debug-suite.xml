@@ -24,7 +24,7 @@
     <classes>
         <!-- Issues in the spec -->
         <!-- CDI-437 -->
-        <class name="org.eclipse.microprofile.config.tck.ConverterTest">
+        <class name="org.eclipse.microprofile.config.tck.CdiOptionalInjectionTest">
             <methods>
                 <include name=".*"/>
             </methods>
