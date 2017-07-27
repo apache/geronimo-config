@@ -40,6 +40,13 @@
         </license>
     </licenses>
 
+    <scm>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/geronimo/components/config/trunk</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/geronimo/components/config/trunk</developerConnection>
+        <url>https://svn.apache.org/repos/asf/geronimo/components/config/trunk</url>
+    </scm>
+
+
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
