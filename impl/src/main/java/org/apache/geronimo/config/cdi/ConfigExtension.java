@@ -39,6 +39,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +64,15 @@ public class ConfigExtension implements Extension {
 
     private Set<Injection> injections = new HashSet<>();
     private List<Throwable> deploymentProblems = new ArrayList<>();
+    private static final Map<Type, Type> REPLACED_TYPES = new HashMap<>();
+
+    static {
+        REPLACED_TYPES.put(double.class, Double.class);
+        REPLACED_TYPES.put(int.class, Integer.class);
+        REPLACED_TYPES.put(float.class, Float.class);
+        REPLACED_TYPES.put(long.class, Long.class);
+        REPLACED_TYPES.put(boolean.class, Boolean.class);
+    }
 
     void init(@Observes final BeforeBeanDiscovery beforeBeanDiscovery, final BeanManager bm) {
         resolver = ConfigProviderResolver.instance();
@@ -73,7 +83,8 @@ public class ConfigExtension implements Extension {
         final InjectionPoint injectionPoint = pip.getInjectionPoint();
         final ConfigProperty configProperty = injectionPoint.getAnnotated().getAnnotation(ConfigProperty.class);
         if (configProperty != null) {
-            Injection injection = new Injection(injectionPoint.getType());
+            Type replacedType = REPLACED_TYPES.getOrDefault(injectionPoint.getType(), injectionPoint.getType());
+            Injection injection = new Injection(replacedType);
             final String key = getConfigKey(injectionPoint, configProperty);
             final boolean defaultUnset = isDefaultUnset(configProperty.defaultValue());
             if (!injections.add(injection)) {
