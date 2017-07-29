@@ -78,10 +78,15 @@ public class ConfigImpl implements Config {
     private void registerDefaultConverter() {
         converters.put(String.class, StringConverter.INSTANCE);
         converters.put(Boolean.class, BooleanConverter.INSTANCE);
+        converters.put(boolean.class, BooleanConverter.INSTANCE);
         converters.put(Double.class, DoubleConverter.INSTANCE);
+        converters.put(double.class, DoubleConverter.INSTANCE);
         converters.put(Float.class, FloatConverter.INSTANCE);
+        converters.put(float.class, FloatConverter.INSTANCE);
         converters.put(Integer.class, IntegerConverter.INSTANCE);
+        converters.put(int.class, IntegerConverter.INSTANCE);
         converters.put(Long.class, LongConverter.INSTANCE);
+        converters.put(long.class, LongConverter.INSTANCE);
 
         converters.put(Duration.class, DurationConverter.INSTANCE);
         converters.put(LocalTime.class, LocalTimeConverter.INSTANCE);
