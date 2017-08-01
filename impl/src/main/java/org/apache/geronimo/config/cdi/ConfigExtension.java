@@ -108,7 +108,7 @@ public class ConfigExtension implements Extension {
                     hasValue = false;
                 }
                 if (!hasValue) {
-                    deploymentProblems.add(new IllegalArgumentException("Missing converter for '" + key + "' from " + injectionPoint));
+                    deploymentProblems.add(new IllegalArgumentException("No configured value for '" + key + "' from " + injectionPoint));
                 }
             }
 
@@ -286,7 +286,7 @@ public class ConfigExtension implements Extension {
             AnnotatedMember member = (AnnotatedMember) ip.getAnnotated();
             AnnotatedType declaringType = member.getDeclaringType();
             if (declaringType != null) {
-                String[] parts = declaringType.getJavaClass().getName().split(".");
+                String[] parts = declaringType.getJavaClass().getCanonicalName().split("\\.");
                 String cn = parts[parts.length - 1];
                 parts[parts.length - 1] = Character.toLowerCase(cn.charAt(0)) + (cn.length() > 1 ? cn.substring(1) : "");
                 StringBuilder sb = new StringBuilder(parts[0]);
