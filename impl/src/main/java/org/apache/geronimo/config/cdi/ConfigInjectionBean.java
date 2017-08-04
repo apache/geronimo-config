@@ -20,11 +20,14 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.Default;
+import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
 import javax.enterprise.util.AnnotationLiteral;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Member;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -126,6 +129,10 @@ public abstract class ConfigInjectionBean<T> implements Bean<T>, PassivationCapa
         return id;
     }
 
+    InjectionPoint getSimpleInjectionPoint() {
+        return simpleInjectionPoint;
+    }
+
     private static class ConfigPropertyLiteral extends AnnotationLiteral<ConfigProperty> implements ConfigProperty {
         @Override
         public String name() {
@@ -137,4 +144,42 @@ public abstract class ConfigInjectionBean<T> implements Bean<T>, PassivationCapa
             return "";
         }
     }
+
+    private final InjectionPoint simpleInjectionPoint = new InjectionPoint() {
+
+        @Override
+        public boolean isTransient() {
+            return false;
+        }
+
+        @Override
+        public boolean isDelegate() {
+            return false;
+        }
+
+        @Override
+        public Type getType() {
+            return InjectionPoint.class;
+        }
+
+        @Override
+        public Set<Annotation> getQualifiers() {
+            return Collections.singleton(new AnnotationLiteral<Default>() {});
+        }
+
+        @Override
+        public Member getMember() {
+            return null;
+        }
+
+        @Override
+        public Bean<?> getBean() {
+            return ConfigInjectionBean.this;
+        }
+
+        @Override
+        public Annotated getAnnotated() {
+            return null;
+        }
+    };
 }

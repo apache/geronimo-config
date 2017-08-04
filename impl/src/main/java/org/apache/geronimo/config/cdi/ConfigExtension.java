@@ -46,7 +46,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static java.util.function.Function.identity;
@@ -139,12 +139,12 @@ public class ConfigExtension implements Extension {
     public void registerConfigProducer(@Observes AfterBeanDiscovery abd, BeanManager bm) {
         injections.stream()
                 .flatMap(injection -> {
-                    final Function<CreationalContext<?>, String> keyProvider;
+                    final BiFunction<CreationalContext<?>, ConfigInjectionBean<?>, String> keyProvider;
                     if (injection.keys.size() == 1) {
                         final String key = injection.keys.iterator().next();
-                        keyProvider = ctx -> key;
+                        keyProvider = (ctx, bean) -> key;
                     } else {
-                        keyProvider = ctx -> getName(findInjectionPoint(bm, ctx));
+                        keyProvider = (ctx, bean) -> getName(findInjectionPoint(bm, ctx, bean));
                     }
 
                     if (ParameterizedType.class.isInstance(injection.type)) {
@@ -161,7 +161,7 @@ public class ConfigExtension implements Extension {
                             return Stream.of(new ConfigInjectionBean<Provider<?>>(injection.type, true) {
                                 @Override
                                 public Provider<?> create(final CreationalContext<Provider<?>> context) {
-                                    return () -> config.getValue(keyProvider.apply(context), providerType);
+                                    return () -> config.getValue(keyProvider.apply(context, this), providerType);
                                 }
                             });
                         } else if (Optional.class == rawType && paramType.getActualTypeArguments().length == 1) {
@@ -173,7 +173,7 @@ public class ConfigExtension implements Extension {
                             return Stream.of(new ConfigInjectionBean<Optional<?>>(injection.type) {
                                 @Override
                                 public Optional<?> create(final CreationalContext<Optional<?>> context) {
-                                    return config.getOptionalValue(keyProvider.apply(context), optionalType);
+                                    return config.getOptionalValue(keyProvider.apply(context, this), optionalType);
                                 }
                             });
                         } else {
@@ -187,7 +187,7 @@ public class ConfigExtension implements Extension {
                             bean = new ConfigInjectionBean<Object>(injection.type) {
                                 @Override
                                 public Object create(final CreationalContext<Object> context) {
-                                    return config.getOptionalValue(keyProvider.apply(context), clazz);
+                                    return config.getOptionalValue(keyProvider.apply(context, this), clazz);
                                 }
                             };
                         } else if (injection.defaultValues.size() == 1) { // common enough to be optimized
@@ -196,7 +196,7 @@ public class ConfigExtension implements Extension {
                             bean = new ConfigInjectionBean<Object>(injection.type) {
                                 @Override
                                 public Object create(final CreationalContext<Object> context) {
-                                    final Optional optionalValue = config.getOptionalValue(keyProvider.apply(context), clazz);
+                                    final Optional optionalValue = config.getOptionalValue(keyProvider.apply(context, this), clazz);
                                     return optionalValue.orElse(alternativeVal);
                                 }
                             };
@@ -206,7 +206,7 @@ public class ConfigExtension implements Extension {
                             bean = new ConfigInjectionBean<Object>(injection.type) {
                                 @Override
                                 public Object create(final CreationalContext<Object> context) {
-                                    final InjectionPoint ip = findInjectionPoint(bm, context);
+                                    final InjectionPoint ip = findInjectionPoint(bm, context, this);
                                     if (ip == null) {
                                         throw new IllegalStateException("Could not retrieve InjectionPoint");
                                     }
@@ -267,7 +267,7 @@ public class ConfigExtension implements Extension {
         return ConfigImpl.class.cast(config);
     }
 
-    private String getName(final InjectionPoint ip) {
+    private static String getName(final InjectionPoint ip) {
         final ConfigProperty annotation = ip.getAnnotated().getAnnotation(ConfigProperty.class);
         final String name = annotation.name();
         return isDefaultUnset(name) ? getConfigKey(ip, annotation) : name;
@@ -307,9 +307,9 @@ public class ConfigExtension implements Extension {
         return defaultValue == null || defaultValue.length() == 0 || defaultValue.equals(ConfigProperty.UNCONFIGURED_VALUE);
     }
 
-    private static InjectionPoint findInjectionPoint(final BeanManager bm, final CreationalContext<?> ctx) {
-        return InjectionPoint.class.cast(
-                bm.getReference(bm.resolve(bm.getBeans(InjectionPoint.class)), InjectionPoint.class, ctx));
+    private static InjectionPoint findInjectionPoint(final BeanManager bm, final CreationalContext<?> ctx,
+                                                     ConfigInjectionBean bean) {
+        return InjectionPoint.class.cast(bm.getInjectableReference(bean.getSimpleInjectionPoint(), ctx));
     }
 
     private static final class Injection {
