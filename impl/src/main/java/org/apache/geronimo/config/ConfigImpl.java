@@ -18,6 +18,7 @@ package org.apache.geronimo.config;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -51,6 +52,7 @@ import org.apache.geronimo.config.converters.LongConverter;
 import org.apache.geronimo.config.converters.OffsetDateTimeConverter;
 import org.apache.geronimo.config.converters.OffsetTimeConverter;
 import org.apache.geronimo.config.converters.StringConverter;
+import org.apache.geronimo.config.converters.URLConverter;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.eclipse.microprofile.config.spi.Converter;
@@ -61,6 +63,7 @@ import javax.enterprise.inject.Vetoed;
 
 /**
  * @author <a href="mailto:struberg@apache.org">Mark Struberg</a>
+ * @author <a href="mailto:johndament@apache.org">John D. Ament</a>
  */
 @Typed
 @Vetoed
@@ -95,6 +98,8 @@ public class ConfigImpl implements Config {
         converters.put(OffsetTime.class, OffsetTimeConverter.INSTANCE);
         converters.put(OffsetDateTime.class, OffsetDateTimeConverter.INSTANCE);
         converters.put(Instant.class, InstantConverter.INSTANCE);
+
+        converters.put(URL.class, URLConverter.INSTANCE);
     }
 
 
