@@ -22,8 +22,8 @@
 
     <parent>
         <groupId>org.apache.geronimo.config</groupId>
-        <artifactId>config-parent</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <artifactId>geronimo-config</artifactId>
+        <version>1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>geronimo-config-impl</artifactId>
