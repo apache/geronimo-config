@@ -33,9 +33,12 @@ import org.testng.annotations.Test;
 
 public class ProviderTest extends Arquillian {
     private static final String SOME_KEY = "org.apache.geronimo.config.test.internal.somekey";
+    private static final String ANOTHER_KEY = "org.apache.geronimo.config.test.internal.anotherkey";
 
     @Deployment
     public static WebArchive deploy() {
+        System.setProperty(SOME_KEY, "someval");
+        System.setProperty(ANOTHER_KEY, "someval");
         JavaArchive testJar = ShrinkWrap
                 .create(JavaArchive.class, "configProviderTest.jar")
                 .addClasses(ProviderTest.class, SomeBean.class)
@@ -70,8 +73,16 @@ public class ProviderTest extends Arquillian {
         @ConfigProperty(name=SOME_KEY)
         private Provider<String> myconfig;
 
+        @Inject
+        @ConfigProperty(name=ANOTHER_KEY)
+        private Provider<String> anotherconfig;
+
         public String getMyconfig() {
             return myconfig.get();
+        }
+
+        public Provider<String> getAnotherconfig() {
+            return anotherconfig;
         }
     }
 }

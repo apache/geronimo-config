@@ -27,7 +27,6 @@
     </parent>
 
     <artifactId>geronimo-config-impl</artifactId>
-    <name>Geronimo Microprofile Configuration :: Implementation</name>
 
     <dependencyManagement>
         <dependencies>
