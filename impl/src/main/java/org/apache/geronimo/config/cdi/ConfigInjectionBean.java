@@ -16,8 +16,6 @@
  */
 package org.apache.geronimo.config.cdi;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -42,7 +40,6 @@ import org.apache.geronimo.config.ConfigImpl;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.config.spi.ConfigProviderResolver;
 
 /**
  * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>
@@ -57,6 +54,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
     private final BeanManager bm;
     private final Class rawType;
     private final Set<Type> types;
+    private final String id;
 
     /**
      * only access via {@link #getConfig(}
@@ -65,10 +63,10 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
 
     public ConfigInjectionBean(BeanManager bm, Type type) {
         this.bm = bm;
-
         types = new HashSet<>();
         types.add(type);
         rawType = getRawType(type);
+        this.id = "ConfigInjectionBean_" + types;
     }
 
     private Class getRawType(Type type) {
@@ -117,7 +115,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
             // handle Provider<T>
             if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Provider.class) && paramType.getActualTypeArguments().length == 1) {
                 Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                return (T) new ConfigValueProvider(getConfig(), key, clazz);
+                return getConfigValue(key, defaultValue, clazz);
             }
 
             // handle Optional<T>
@@ -128,17 +126,21 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         }
         else {
             Class clazz = (Class) annotated.getBaseType();
-            if (ConfigExtension.isDefaultUnset(defaultValue)) {
-                return (T) getConfig().getValue(key, clazz);
-            }
-            else {
-                Config config = getConfig();
-                return (T) config.getOptionalValue(key, clazz)
-                        .orElse(((ConfigImpl) config).convert(defaultValue, clazz));
-            }
+            return getConfigValue(key, defaultValue, clazz);
         }
 
         throw new IllegalStateException("unhandled ConfigProperty");
+    }
+
+    private T getConfigValue(String key, String defaultValue, Class clazz) {
+        if (ConfigExtension.isDefaultUnset(defaultValue)) {
+            return (T) getConfig().getValue(key, clazz);
+        }
+        else {
+            Config config = getConfig();
+            return (T) config.getOptionalValue(key, clazz)
+                    .orElse(((ConfigImpl) config).convert(defaultValue, clazz));
+        }
     }
 
     /**
@@ -210,12 +212,12 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
 
     @Override
     public boolean isAlternative() {
-        return true;
+        return false;
     }
 
     @Override
     public String getId() {
-        return "ConfigInjectionBean_" + rawType.getName();
+        return id;
     }
 
     private static class ConfigPropertyLiteral extends AnnotationLiteral<ConfigProperty> implements ConfigProperty {
@@ -228,33 +230,5 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         public String defaultValue() {
             return "";
         }
-    }
-
-    /**
-     * A special Provider&lt;T&gt;
-     * This concrete class is needed because we need the injected Provider for the ConfigProperty
-     * to be Serializable. A Lambda would not work in this case
-     */
-    public static class ConfigValueProvider<T> implements Provider<T>, Serializable {
-        private transient Config config;
-        private final String key;
-        private final Class<T> type;
-
-        ConfigValueProvider(Config config, String key, Class<T> type) {
-            this.config = config;
-            this.key = key;
-            this.type = type;
-        }
-
-        @Override
-        public T get() {
-            return (T) config.getValue(key, type);
-        }
-
-        private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-            in.defaultReadObject();
-            config = ConfigProviderResolver.instance().getConfig();
-        }
-
     }
 }

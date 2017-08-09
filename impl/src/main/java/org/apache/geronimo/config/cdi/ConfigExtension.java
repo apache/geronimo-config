@@ -16,15 +16,10 @@
  */
 package org.apache.geronimo.config.cdi;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import org.apache.geronimo.config.DefaultConfigProvider;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
@@ -36,11 +31,16 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.ProcessInjectionPoint;
 import javax.inject.Provider;
-
-import org.apache.geronimo.config.DefaultConfigProvider;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>
@@ -48,6 +48,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class ConfigExtension implements Extension {
     private Config config;
 
+    private static final Predicate<InjectionPoint> NOT_PROVIDERS = ip -> (ip.getType() instanceof Class) || (ip.getType() instanceof ParameterizedType && ((ParameterizedType)ip.getType()).getRawType() != Provider.class);
     private static final Map<Type, Type> REPLACED_TYPES = new HashMap<>();
 
     static {
@@ -70,13 +71,9 @@ public class ConfigExtension implements Extension {
 
     public void registerConfigProducer(@Observes AfterBeanDiscovery abd, BeanManager bm) {
         Set<Type> types = injectionPoints.stream()
-                .filter(ip -> ip.getType() instanceof Class)
+                .filter(NOT_PROVIDERS)
                 .map(ip -> REPLACED_TYPES.getOrDefault(ip.getType(), ip.getType()))
                 .collect(Collectors.toSet());
-
-        // Provider and Optional are ParameterizedTypes and not a Class, so we need to add them manually
-        types.add(Provider.class);
-        types.add(Optional.class);
 
         types.stream()
                 .map(type -> new ConfigInjectionBean(bm, type))
