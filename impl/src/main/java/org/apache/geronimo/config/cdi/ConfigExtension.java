@@ -69,16 +69,18 @@ public class ConfigExtension implements Extension {
     }
 
     public void registerConfigProducer(@Observes AfterBeanDiscovery abd, BeanManager bm) {
-        Set<Class> types = injectionPoints.stream()
+        Set<Type> types = injectionPoints.stream()
                 .filter(ip -> ip.getType() instanceof Class)
-                .map(ip -> (Class) REPLACED_TYPES.getOrDefault(ip.getType(), ip.getType()))
+                .map(ip -> REPLACED_TYPES.getOrDefault(ip.getType(), ip.getType()))
                 .collect(Collectors.toSet());
 
         // Provider and Optional are ParameterizedTypes and not a Class, so we need to add them manually
         types.add(Provider.class);
         types.add(Optional.class);
 
-        types.forEach(type -> abd.addBean(new ConfigInjectionBean(bm, type)));
+        types.stream()
+                .map(type -> new ConfigInjectionBean(bm, type))
+                .forEach(abd::addBean);
     }
 
     public void validate(@Observes AfterDeploymentValidation add) {

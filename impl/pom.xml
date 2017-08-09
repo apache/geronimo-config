@@ -222,19 +222,19 @@
                 <dependency>
                     <groupId>org.jboss.weld.se</groupId>
                     <artifactId>weld-se-shaded</artifactId>
-                    <version>3.0.0.Final</version>
+                    <version>${weld.version}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.jboss.arquillian.container</groupId>
                     <artifactId>arquillian-weld-embedded</artifactId>
-                    <version>2.0.0-SNAPSHOT</version>
+                    <version>${arquillian-weld-embedded.version}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>javax.enterprise</groupId>
                     <artifactId>cdi-api</artifactId>
-                    <version>2.0</version>
+                    <version>${cdi2-api.version}</version>
                 </dependency>
             </dependencies>
         </profile>

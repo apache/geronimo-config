@@ -86,7 +86,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
 
     @Override
     public Set<InjectionPoint> getInjectionPoints() {
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
     @Override
@@ -101,9 +101,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
 
     @Override
     public T create(CreationalContext<T> context) {
-        Set<Bean<?>> beans = bm.getBeans(InjectionPoint.class);
-        Bean<?> bean = bm.resolve(beans);
-        InjectionPoint ip = (InjectionPoint) bm.getReference(bean, InjectionPoint.class,  context);
+        InjectionPoint ip = (InjectionPoint)bm.getInjectableReference(new ConfigInjectionPoint(this),context);
         if (ip == null) {
             throw new IllegalStateException("Could not retrieve InjectionPoint");
         }
@@ -143,12 +141,11 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         throw new IllegalStateException("unhandled ConfigProperty");
     }
 
-
     /**
      * Get the property key to use.
      * In case the {@link ConfigProperty#name()} is empty we will try to determine the key name from the InjectionPoint.
      */
-    public static String getConfigKey(InjectionPoint ip, ConfigProperty configProperty) {
+    static String getConfigKey(InjectionPoint ip, ConfigProperty configProperty) {
         String key = configProperty.name();
         if (key.length() > 0) {
             return key;
@@ -208,7 +205,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
 
     @Override
     public Set<Class<? extends Annotation>> getStereotypes() {
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
     @Override
