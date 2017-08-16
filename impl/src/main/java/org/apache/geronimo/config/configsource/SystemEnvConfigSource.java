@@ -57,7 +57,7 @@ public class SystemEnvConfigSource extends BaseConfigSource {
     @Override
     public String getValue(String key) {
         String val = configValues.get(key);
-        if (val == null || val.isEmpty()) {
+        if (val == null) {
             val = configValues.get(key.replace('.', '_'));
         }
 

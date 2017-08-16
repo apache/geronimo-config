@@ -116,7 +116,7 @@ public class ConfigImpl implements Config {
     @Override
     public <T> T getValue(String propertyName, Class<T> propertyType) {
         String value = getValue(propertyName);
-        if (value == null || value.isEmpty()) {
+        if (value == null) {
             throw new NoSuchElementException("No configured value found for config key " + propertyName);
         }
 
@@ -219,13 +219,9 @@ public class ConfigImpl implements Config {
     }
 
 
-    protected List<ConfigSource> sortDescending(List<ConfigSource> configSources) {
-        Collections.sort(configSources, new Comparator<ConfigSource>() {
-            @Override
-            public int compare(ConfigSource configSource1, ConfigSource configSource2) {
-                return (configSource1.getOrdinal() > configSource2.getOrdinal()) ? -1 : 1;
-            }
-        });
+    private List<ConfigSource> sortDescending(List<ConfigSource> configSources) {
+        configSources.sort(
+                (configSource1, configSource2) -> (configSource1.getOrdinal() > configSource2.getOrdinal()) ? -1 : 1);
         return configSources;
 
     }
