@@ -75,6 +75,13 @@ public class ConfigExtension implements Extension {
                 .map(ip -> REPLACED_TYPES.getOrDefault(ip.getType(), ip.getType()))
                 .collect(Collectors.toSet());
 
+        Set<Type> providerTypes = injectionPoints.stream()
+                .filter(NOT_PROVIDERS.negate())
+                .map(ip -> ((ParameterizedType)ip.getType()).getActualTypeArguments()[0])
+                .collect(Collectors.toSet());
+
+        types.addAll(providerTypes);
+
         types.stream()
                 .map(type -> new ConfigInjectionBean(bm, type))
                 .forEach(abd::addBean);
