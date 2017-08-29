@@ -16,13 +16,10 @@
  */
 package org.apache.geronimo.config.cdi;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import org.apache.geronimo.config.ConfigImpl;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;
@@ -35,11 +32,14 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Provider;
-
-import org.apache.geronimo.config.ConfigImpl;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>
@@ -122,6 +122,11 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
             if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Optional.class) && paramType.getActualTypeArguments().length == 1) {
                 Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
                 return (T) getConfig().getOptionalValue(key, clazz);
+            }
+
+            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Supplier.class) && paramType.getActualTypeArguments().length == 1) {
+                Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
+                return (T) new ConfigSupplier(clazz, key, defaultValue, (ConfigImpl)getConfig());
             }
         }
         else {
