@@ -24,6 +24,7 @@ import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
 import java.util.Map;
 
+import static java.lang.Boolean.valueOf;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
@@ -35,10 +36,15 @@ import static java.util.stream.Collectors.toMap;
 @Typed
 @Vetoed
 public class SystemPropertyConfigSource extends BaseConfigSource {
+    private static final String COPY_PROPERTY = "org.apache.geronimo.config.configsource.SystemPropertyConfigSource.copy";
     private final Map<String, String> instance;
 
     public SystemPropertyConfigSource() {
-        instance = "true".equalsIgnoreCase(System.getProperty("org.apache.geronimo.config.configsource.SystemPropertyConfigSource.copy", "true")) ?
+        this(valueOf(System.getProperty(COPY_PROPERTY, "true")));
+    }
+
+    public SystemPropertyConfigSource(boolean copy) {
+        instance = copy ?
                 System.getProperties().stringPropertyNames().stream().collect(toMap(identity(), System::getProperty)) :
                 Map.class.cast(System.getProperties());
         initOrdinal(400);
