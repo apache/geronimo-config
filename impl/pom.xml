@@ -87,8 +87,7 @@
                 <version>2.19.1</version>
                 <configuration>
                     <suiteXmlFiles>
-                        <suiteXmlFile>tck-suite.xml</suiteXmlFile>
-                        <suiteXmlFile>internal-suite.xml</suiteXmlFile>
+                        <suiteXmlFile>ci-suite.xml</suiteXmlFile>
                     </suiteXmlFiles>
                     <environmentVariables>
                         <CDPATH>value-for-tck-since-we-ignore-empty</CDPATH>

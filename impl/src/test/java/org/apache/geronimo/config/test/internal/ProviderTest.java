@@ -39,8 +39,7 @@ public class ProviderTest extends Arquillian {
         JavaArchive testJar = ShrinkWrap
                 .create(JavaArchive.class, "configProviderTest.jar")
                 .addClasses(ProviderTest.class, SomeBean.class)
-                .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
-                .as(JavaArchive.class);
+                .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
 
         return ShrinkWrap
                 .create(WebArchive.class, "providerTest.war")

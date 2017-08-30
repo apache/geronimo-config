@@ -15,11 +15,20 @@
     the specific language governing permissions and limitations under the
     License.
 -->
-<suite name="MicroProfile-Config-TCK" verbose="2" configfailurepolicy="continue">
+<suite name="microprofileconfig-TCK" verbose="2" configfailurepolicy="continue" >
 
-    <test name="Microprofile Config TCK">
+    <test name="Microprofile-config 1_0 TCK">
         <packages>
-            <package name="org.eclipse.microprofile.config.tck.*"/>
+            <package name="org.eclipse.microprofile.config.tck.*">
+            </package>
+
+        </packages>
+    </test>
+
+    <test name="Geronimo Config Tests">
+        <packages>
+            <package name="org.apache.geronimo.config.test.internal.*">
+            </package>
         </packages>
     </test>
 
