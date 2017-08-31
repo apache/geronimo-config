@@ -28,16 +28,14 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.geronimo.config.converters.BooleanConverter;
 import org.apache.geronimo.config.converters.DoubleConverter;
@@ -158,21 +156,13 @@ public class ConfigImpl implements Config {
     }
 
     public ConfigValueImpl<String> access(String key) {
-        return new ConfigValueImpl<String>(this, key);
+        return new ConfigValueImpl<>(this, key);
     }
 
     @Override
     public Iterable<String> getPropertyNames() {
-        Set<String> result = new HashSet<>();
-
-        for (ConfigSource configSource : configSources) {
-            result.addAll(configSource.getProperties().keySet());
-
-        }
-        return result;
+        return configSources.stream().flatMap(c -> c.getPropertyNames().stream()).collect(Collectors.toSet());
     }
-
-
 
     @Override
     public Iterable<ConfigSource> getConfigSources() {
