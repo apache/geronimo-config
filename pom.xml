@@ -50,9 +50,9 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <microprofile-config.version>1.1</microprofile-config.version>
+        <microprofile-config.version>1.1-SNAPSHOT</microprofile-config.version>
         <owb.version>1.7.4</owb.version>
-        <owb2.version>2.0.1-SNAPSHOT</owb2.version>
+        <owb2.version>2.0.1</owb2.version>
         <arquillian.version>1.1.13.Final</arquillian.version>
         <arquillian-weld-embedded.version>2.0.0.Beta5</arquillian-weld-embedded.version>
         <cdi2-api.version>2.0</cdi2-api.version>
