@@ -161,17 +161,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
             AnnotatedMember member = (AnnotatedMember) ip.getAnnotated();
             AnnotatedType declaringType = member.getDeclaringType();
             if (declaringType != null) {
-                String[] parts = declaringType.getJavaClass().getCanonicalName().split("\\.");
-                String cn = parts[parts.length-1];
-                parts[parts.length-1] = Character.toLowerCase(cn.charAt(0)) + (cn.length() > 1 ? cn.substring(1) : "");
-                StringBuilder sb = new StringBuilder(parts[0]);
-                for (int i = 1; i < parts.length; i++) {
-                    sb.append(".").append(parts[i]);
-                }
-
-                // now add the field name
-                sb.append(".").append(member.getJavaMember().getName());
-                return sb.toString();
+                return declaringType.getJavaClass().getCanonicalName() + "." + member.getJavaMember().getName();
             }
         }
 
