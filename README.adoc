@@ -19,9 +19,9 @@
 
 ## Status
 
-Implementation of the MicroProfile Config Specification Proposal.
+Implementation of the MicroProfile Config Specification.
 
-== Rational
+== Rationale
 
 Many project artifacts (e.g. WAR, EAR) should only be created once and then get installed at different customers, stages, etc
 They need to target those different execution environments without necessity of any repackaging.
@@ -54,27 +54,42 @@ And I can later simply e.g set a system property to change this default configur
 
 == Custom ConfigSources
 
-It is possible to write and register custom `ConfigSource` s.
+It is possible to write and register custom `ConfigSource`s.
 An example would be a ConfigSource which gets the configured values from a shared database table in a cluster.
 
 == Building
 
 `$> mvn clean install`
 
+== Adding to your project
+
+To add Geronimo Config to your project, just add the following dependency.
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.apache.geronimo.config</groupId>
+    <artifactId>geronimo-config-impl</artifactId>
+    <version>1.0</version>
+</dependency>
+----
+
+
 == Config API
 
-The MicroProfile Config API and further information can be found at
+Geronimo Config implements The MicroProfile Config API v1.1 and further information can be found at
 
 https://github.com/eclipse/microprofile-config/
 
-The API is also available as Maven Artifact
+The API is also available as Maven Artifact, which you could use if provided by your container
 
 [source,xml]
 ----
 <dependency>
     <groupId>org.eclipse.microprofile.config</groupId>
     <artifactId>microprofile-config-api</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1</version>
+    <scope>provided</scope>
 </dependency>
 ----
 
