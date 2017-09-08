@@ -59,7 +59,14 @@ An example would be a ConfigSource which gets the configured values from a share
 
 == Building
 
+Against Apache OpenWebBeans 1.7.x:
 `$> mvn clean install`
+
+Against Apache OpenWebBeans 2.0.x:
+`$> mvn clean install -POWB2`
+
+Against JBoss Weld 3.0.x:
+`$> mvn clean install -PWeld3`
 
 == Adding to your project
 
