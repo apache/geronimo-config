@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.geronimo.config</groupId>
         <artifactId>geronimo-config</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0</version>
     </parent>
 
     <artifactId>geronimo-config-impl</artifactId>
