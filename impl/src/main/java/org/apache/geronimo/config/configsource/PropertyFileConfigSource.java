@@ -21,16 +21,14 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
-
-import javax.enterprise.inject.Typed;
-import javax.enterprise.inject.Vetoed;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:struberg@apache.org">Mark Struberg</a>
  */
-@Typed
-@Vetoed
 public class PropertyFileConfigSource extends BaseConfigSource {
+    private static final Logger LOG = Logger.getLogger(PropertyFileConfigSource.class.getName());
     private Map<String, String> properties;
     private String fileName;
 
@@ -74,7 +72,8 @@ public class PropertyFileConfigSource extends BaseConfigSource {
             }
         }
         catch (IOException e) {
-            return null;
+            // don't return null on IOException
+            LOG.log(Level.WARNING, "Unable to read URL "+url, e);
         }
         finally {
             try {
