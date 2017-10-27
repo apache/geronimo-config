@@ -28,7 +28,7 @@
 
     <groupId>org.apache.geronimo.config</groupId>
     <artifactId>geronimo-config</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Geronimo Microprofile Configuration</name>
 
@@ -41,9 +41,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/geronimo/components/config/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/geronimo/components/config/trunk</developerConnection>
-        <url>https://svn.apache.org/repos/asf/geronimo/components/config/trunk</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/geronimo/components/config/branches/ConfigJSR</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/geronimo/components/config/branches/ConfigJSR</developerConnection>
+        <url>https://svn.apache.org/repos/asf/geronimo/components/config/branches/ConfigJSR</url>
     </scm>
 
 
