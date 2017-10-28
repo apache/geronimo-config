@@ -18,7 +18,7 @@
  */
 package org.apache.geronimo.config.configsource;
 
-import org.eclipse.microprofile.config.spi.ConfigSource;
+import javax.config.spi.ConfigSource;
 
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;

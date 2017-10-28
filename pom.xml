@@ -50,7 +50,10 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+
+        <javaconfig.version>1.0-SNAPSHOT</javaconfig.version>
         <microprofile-config.version>1.1</microprofile-config.version>
+
         <owb.version>1.7.4</owb.version>
         <owb2.version>2.0.1</owb2.version>
         <arquillian.version>1.1.13.Final</arquillian.version>

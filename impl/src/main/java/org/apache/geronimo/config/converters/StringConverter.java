@@ -19,7 +19,7 @@ package org.apache.geronimo.config.converters;
 import javax.annotation.Priority;
 import javax.enterprise.inject.Vetoed;
 
-import org.eclipse.microprofile.config.spi.Converter;
+import javax.config.spi.Converter;
 
 /**
  * 1:1 string output. Just to make converter logic happy.

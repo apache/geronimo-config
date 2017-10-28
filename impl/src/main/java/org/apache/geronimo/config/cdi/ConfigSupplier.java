@@ -19,7 +19,7 @@
 package org.apache.geronimo.config.cdi;
 
 import org.apache.geronimo.config.ConfigImpl;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import javax.config.inject.ConfigProperty;
 
 import java.util.function.Supplier;
 

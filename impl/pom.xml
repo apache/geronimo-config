@@ -43,15 +43,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.eclipse.microprofile.config</groupId>
-            <artifactId>microprofile-config-api</artifactId>
-            <version>${microprofile-config.version}</version>
+            <groupId>javax.config</groupId>
+            <artifactId>javaconfig-api</artifactId>
+            <version>${javaconfig.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.microprofile.config</groupId>
-            <artifactId>microprofile-config-tck</artifactId>
-            <version>${microprofile-config.version}</version>
+            <groupId>javax.config</groupId>
+            <artifactId>javaconfig-tck</artifactId>
+            <version>${javaconfig.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -21,7 +21,7 @@ import org.apache.geronimo.config.DefaultConfigProvider;
 import org.apache.geronimo.config.cdi.ConfigInjectionProducer;
 import org.apache.geronimo.config.configsource.BaseConfigSource;
 import org.apache.geronimo.config.converters.BooleanConverter;
-import org.eclipse.microprofile.config.spi.ConfigProviderResolver;
+import javax.config.spi.ConfigProviderResolver;
 import org.jboss.arquillian.container.test.spi.client.deployment.ApplicationArchiveProcessor;
 import org.jboss.arquillian.test.spi.TestClass;
 import org.jboss.shrinkwrap.api.Archive;

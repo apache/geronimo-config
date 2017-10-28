@@ -29,8 +29,8 @@ import java.util.logging.Logger;
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
 
-import org.eclipse.microprofile.config.spi.ConfigSource;
-import org.eclipse.microprofile.config.spi.ConfigSourceProvider;
+import javax.config.spi.ConfigSource;
+import javax.config.spi.ConfigSourceProvider;
 
 
 /**

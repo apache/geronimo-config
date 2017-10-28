@@ -16,11 +16,11 @@
  */
 package org.apache.geronimo.config;
 
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.spi.ConfigBuilder;
-import org.eclipse.microprofile.config.spi.ConfigSource;
-import org.eclipse.microprofile.config.spi.ConfigSourceProvider;
-import org.eclipse.microprofile.config.spi.Converter;
+import javax.config.Config;
+import javax.config.spi.ConfigBuilder;
+import javax.config.spi.ConfigSource;
+import javax.config.spi.ConfigSourceProvider;
+import javax.config.spi.Converter;
 import org.apache.geronimo.config.configsource.PropertyFileConfigSourceProvider;
 import org.apache.geronimo.config.configsource.SystemEnvConfigSource;
 import org.apache.geronimo.config.configsource.SystemPropertyConfigSource;
@@ -132,7 +132,7 @@ public class DefaultConfigBuilder implements ConfigBuilder {
 
         configSources.add(new SystemEnvConfigSource());
         configSources.add(new SystemPropertyConfigSource());
-        configSources.addAll(new PropertyFileConfigSourceProvider("/META-INF/microprofile-config.properties", true, forClassLoader).getConfigSources(forClassLoader));
+        configSources.addAll(new PropertyFileConfigSourceProvider("/META-INF/javaconfig.properties", true, forClassLoader).getConfigSources(forClassLoader));
 
         return configSources;
     }

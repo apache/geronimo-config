@@ -17,9 +17,9 @@
 -->
 <suite name="microprofileconfig-TCK" verbose="2" configfailurepolicy="continue" >
 
-    <test name="Microprofile-config 1_0 TCK">
+    <test name="javaconfig 1_0 TCK">
         <packages>
-            <package name="org.eclipse.microprofile.config.tck.*">
+            <package name="org.eclipse.javaconfig.tck.*">
             </package>
 
         </packages>

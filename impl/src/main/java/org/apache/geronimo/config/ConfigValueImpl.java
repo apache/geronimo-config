@@ -16,7 +16,7 @@
  */
 package org.apache.geronimo.config;
 
-import org.eclipse.microprofile.config.spi.Converter;
+import javax.config.spi.Converter;
 
 import java.util.ArrayList;
 import java.util.List;

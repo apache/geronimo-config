@@ -24,7 +24,7 @@ import java.util.Map;
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
 
-import org.eclipse.microprofile.config.spi.ConfigSource;
+import javax.config.spi.ConfigSource;
 
 /**
  * {@link ConfigSource} which uses {@link System#getenv()}

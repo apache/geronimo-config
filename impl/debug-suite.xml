@@ -23,8 +23,7 @@
 
     <classes>
         <!-- Issues in the spec -->
-        <!-- CDI-437 -->
-        <class name="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest">
+        <class name="org.eclipse.javaconfig.tck.CDIPlainInjectionTest">
             <methods>
                 <include name=".*"/>
             </methods>

@@ -25,9 +25,9 @@ import java.util.WeakHashMap;
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
 
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.spi.ConfigBuilder;
-import org.eclipse.microprofile.config.spi.ConfigProviderResolver;
+import javax.config.Config;
+import javax.config.spi.ConfigBuilder;
+import javax.config.spi.ConfigProviderResolver;
 
 
 /**

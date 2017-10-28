@@ -19,7 +19,7 @@
 
 ## Status
 
-Implementation of the MicroProfile Config Specification.
+Implementation of the JSR-382, Configuration API for Java, v1.0 Specification.
 
 == Rationale
 
@@ -37,6 +37,9 @@ In 2010 it got moved over to the Apache MyFaces CODI project and enhanced to als
 In 2011 we further enhanced it while moving CODI to the Apache DeltaSpike project.
 Romain Manni-Bucau (Apache/Tomitribe), Ron Smeral (JBoss) and Anatole Tresch also gave appreciated input in the last years.
 
+This work did lead to the MicroProfile Config specification.
+Which in turn was used as baseline for JSR-382.
+
 == How it works
 
 A 'Configuration' consists of the information collected from the registered `ConfigSource` s.
@@ -47,9 +50,9 @@ By default there are 3 default ConfigSources:
 
 * `System.getenv()` (ordinal=400)
 * `System.getProperties()` (ordinal=300)
-* all `META-INF/microprofile-config.properties` files on the ClassPath. (ordinal=100, separately configurable via a config_ordinal property inside each file)
+* all `META-INF/javaconfig.properties` files on the ClassPath. (ordinal=100, separately configurable via a config_ordinal property inside each file)
 
-That means that I can put my default configuration in a `META-INF/microprofile-config.properties` anywhere on the classpath.
+That means that I can put my default configuration in a `META-INF/javaconfig.properties` anywhere on the classpath.
 And I can later simply e.g set a system property to change this default configuration.
 
 == Custom ConfigSources
@@ -77,7 +80,7 @@ To add Geronimo Config to your project, just add the following dependency.
 <dependency>
     <groupId>org.apache.geronimo.config</groupId>
     <artifactId>geronimo-config-impl</artifactId>
-    <version>1.0</version>
+    <version>2.0</version>
 </dependency>
 ----
 
@@ -93,9 +96,9 @@ The API is also available as Maven Artifact, which you could use if provided by 
 [source,xml]
 ----
 <dependency>
-    <groupId>org.eclipse.microprofile.config</groupId>
-    <artifactId>microprofile-config-api</artifactId>
-    <version>1.1</version>
+    <groupId>javax.config</groupId>
+    <artifactId>javaconfig-api</artifactId>
+    <version>1.0-SNAPSHOT</version>
     <scope>provided</scope>
 </dependency>
 ----

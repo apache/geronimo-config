@@ -51,9 +51,9 @@ import org.apache.geronimo.config.converters.OffsetDateTimeConverter;
 import org.apache.geronimo.config.converters.OffsetTimeConverter;
 import org.apache.geronimo.config.converters.StringConverter;
 import org.apache.geronimo.config.converters.URLConverter;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.spi.ConfigSource;
-import org.eclipse.microprofile.config.spi.Converter;
+import javax.config.Config;
+import javax.config.spi.ConfigSource;
+import javax.config.spi.Converter;
 
 import javax.annotation.Priority;
 import javax.enterprise.inject.Typed;

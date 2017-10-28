@@ -21,7 +21,7 @@ package org.apache.geronimo.config.configsource;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.eclipse.microprofile.config.spi.ConfigSource;
+import javax.config.spi.ConfigSource;
 
 
 /**

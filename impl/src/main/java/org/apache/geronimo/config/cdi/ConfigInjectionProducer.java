@@ -21,8 +21,8 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
+import javax.config.Config;
+import javax.config.ConfigProvider;
 
 /**
  * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>

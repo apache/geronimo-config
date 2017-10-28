@@ -17,9 +17,9 @@
 package org.apache.geronimo.config.cdi;
 
 import org.apache.geronimo.config.ConfigImpl;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import javax.config.Config;
+import javax.config.ConfigProvider;
+import javax.config.inject.ConfigProperty;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;

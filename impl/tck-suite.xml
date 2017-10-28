@@ -19,7 +19,7 @@
 
     <test name="Microprofile Config TCK">
         <packages>
-            <package name="org.eclipse.microprofile.config.tck.*"/>
+            <package name="org.eclipse.javaconfig.tck.*"/>
         </packages>
     </test>
 
