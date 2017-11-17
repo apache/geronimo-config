@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ import org.apache.geronimo.config.converters.BooleanConverter;
 import org.apache.geronimo.config.converters.DoubleConverter;
 import org.apache.geronimo.config.converters.DurationConverter;
 import org.apache.geronimo.config.converters.FloatConverter;
+import org.apache.geronimo.config.converters.ImplicitConverter;
 import org.apache.geronimo.config.converters.InstantConverter;
 import org.apache.geronimo.config.converters.IntegerConverter;
 import org.apache.geronimo.config.converters.LocalDateConverter;
@@ -70,6 +72,7 @@ public class ConfigImpl implements Config {
 
     protected List<ConfigSource> configSources = new ArrayList<>();
     protected Map<Type, Converter> converters = new HashMap<>();
+    protected Map<Type, Converter> implicitConverters = new ConcurrentHashMap<>();
 
 
     public ConfigImpl() {
@@ -150,7 +153,27 @@ public class ConfigImpl implements Config {
     private <T> Converter getConverter(Class<T> asType) {
         Converter converter = converters.get(asType);
         if (converter == null) {
+            converter = getImplicitConverter(asType);
+        }
+        if (converter == null) {
             throw new IllegalArgumentException("No Converter registered for class " + asType);
+        }
+        return converter;
+    }
+
+    private <T> Converter getImplicitConverter(Class<T> asType) {
+        Converter converter = implicitConverters.get(asType);
+        if (converter == null) {
+            synchronized (implicitConverters) {
+                converter = implicitConverters.get(asType);
+                if (converter == null) {
+                    // try to check whether the class is an 'implicit converter'
+                    converter = ImplicitConverter.getImplicitConverter(asType);
+                    if (converter != null) {
+                        implicitConverters.putIfAbsent(asType, converter);
+                    }
+                }
+            }
         }
         return converter;
     }
