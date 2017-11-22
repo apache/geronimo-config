@@ -19,7 +19,7 @@
 
     <test name="javaconfig 1_0 TCK">
         <packages>
-            <package name="org.eclipse.javaconfig.tck.*">
+            <package name="org.eclipse.configjsr.*">
             </package>
 
         </packages>
