@@ -23,7 +23,7 @@
 
     <classes>
         <!-- Issues in the spec -->
-        <class name="org.eclipse.javaconfig.tck.CDIPlainInjectionTest">
+        <class name="org.eclipse.configjsr.ArrayConverterTest">
             <methods>
                 <include name=".*"/>
             </methods>

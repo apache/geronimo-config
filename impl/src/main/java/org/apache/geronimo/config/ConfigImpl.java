@@ -167,10 +167,22 @@ public class ConfigImpl implements Config {
             synchronized (implicitConverters) {
                 converter = implicitConverters.get(asType);
                 if (converter == null) {
-                    // try to check whether the class is an 'implicit converter'
-                    converter = ImplicitConverter.getImplicitConverter(asType);
-                    if (converter != null) {
-                        implicitConverters.putIfAbsent(asType, converter);
+                    if (asType.isArray()) {
+                        Converter singleItemConverter = getConverter(asType.getComponentType());
+                        if (singleItemConverter == null) {
+                            return null;
+                        }
+                        else {
+                            converter = new ImplicitConverter.ImplicitArrayConverter(singleItemConverter, asType.getComponentType());
+                            implicitConverters.putIfAbsent(asType, converter);
+                        }
+                    }
+                    else {
+                        // try to check whether the class is an 'implicit converter'
+                        converter = ImplicitConverter.getImplicitConverter(asType);
+                        if (converter != null) {
+                            implicitConverters.putIfAbsent(asType, converter);
+                        }
                     }
                 }
             }
@@ -217,6 +229,14 @@ public class ConfigImpl implements Config {
         }
     }
 
+    public void addPrioritisedConverter(DefaultConfigBuilder.PrioritisedConverter prioritisedConverter) {
+        Converter oldConverter = converters.get(prioritisedConverter.getType());
+        if (oldConverter == null || prioritisedConverter.getPriority() >= getPriority(oldConverter)) {
+            converters.put(prioritisedConverter.getType(), prioritisedConverter.getConverter());
+        }
+    }
+
+
     private int getPriority(Converter<?> converter) {
         int priority = 100;
         Priority priorityAnnotation = converter.getClass().getAnnotation(Priority.class);
@@ -260,4 +280,5 @@ public class ConfigImpl implements Config {
 
         return getTypeOfConverter(clazz.getSuperclass());
     }
+
 }

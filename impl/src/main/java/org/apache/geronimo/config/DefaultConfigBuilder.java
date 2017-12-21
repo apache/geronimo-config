@@ -27,8 +27,12 @@ import org.apache.geronimo.config.configsource.SystemPropertyConfigSource;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
@@ -42,9 +46,12 @@ import static java.util.Arrays.asList;
 @Typed
 @Vetoed
 public class DefaultConfigBuilder implements ConfigBuilder {
+
+
     protected ClassLoader forClassLoader;
     private final List<ConfigSource> sources = new ArrayList<>();
     private final List<Converter<?>> converters = new ArrayList<>();
+    private final Map<Class<?>, PrioritisedConverter> prioritisedConverters = new HashMap<>();
     private boolean ignoreDefaultSources = true;
     private boolean ignoreDiscoveredSources = true;
     private boolean ignoreDiscoveredConverters = true;
@@ -76,6 +83,25 @@ public class DefaultConfigBuilder implements ConfigBuilder {
     @Override
     public ConfigBuilder withConverters(Converter<?>... converters) {
         this.converters.addAll(asList(converters));
+        return this;
+    }
+
+    @Override
+    public <T> ConfigBuilder withConverter(Class<T> type, int priority, Converter<T> converter) {
+        PrioritisedConverter oldPrioritisedConverter = prioritisedConverters.get(type);
+        if (oldPrioritisedConverter != null) {
+            if (oldPrioritisedConverter.priority == priority) {
+                throw new IllegalStateException("Found 2 converters with the same priority for type " + type
+                    + ". This will result in random behaviour -> aborting! Previous Converter: "
+                    + oldPrioritisedConverter.converter.getClass() + " 2nd Converter: " + converter.getClass());
+            }
+            if (oldPrioritisedConverter.priority > priority) {
+                return this;
+            }
+        }
+
+        prioritisedConverters.put(type, new PrioritisedConverter(type, priority, converter));
+
         return this;
     }
 
@@ -124,6 +150,9 @@ public class DefaultConfigBuilder implements ConfigBuilder {
             config.addConverter(converter);
         }
 
+        for (PrioritisedConverter prioritisedConverter : prioritisedConverters.values()) {
+            config.addPrioritisedConverter(prioritisedConverter);
+        }
         return config;
     }
 
@@ -135,5 +164,29 @@ public class DefaultConfigBuilder implements ConfigBuilder {
         configSources.addAll(new PropertyFileConfigSourceProvider("/META-INF/javaconfig.properties", true, forClassLoader).getConfigSources(forClassLoader));
 
         return configSources;
+    }
+
+    static class PrioritisedConverter {
+        private final Class<?> clazz;
+        private final int priority;
+        private final Converter converter;
+
+        public PrioritisedConverter(Class<?> clazz, int priority, Converter converter) {
+            this.clazz = clazz;
+            this.priority = priority;
+            this.converter = converter;
+        }
+
+        public Class<?> getType() {
+            return clazz;
+        }
+
+        public int getPriority() {
+            return priority;
+        }
+
+        public Converter getConverter() {
+            return converter;
+        }
     }
 }

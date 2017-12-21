@@ -33,10 +33,14 @@ import javax.enterprise.inject.spi.PassivationCapable;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Provider;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -112,21 +116,27 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
             ParameterizedType paramType = (ParameterizedType) annotated.getBaseType();
             Type rawType = paramType.getRawType();
 
+            Class clazzParam = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
+
             // handle Provider<T>
             if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Provider.class) && paramType.getActualTypeArguments().length == 1) {
-                Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                return getConfigValue(key, defaultValue, clazz);
+                return getConfigValue(key, defaultValue, clazzParam);
             }
 
             // handle Optional<T>
             if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Optional.class) && paramType.getActualTypeArguments().length == 1) {
-                Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                return (T) getConfig().getOptionalValue(key, clazz);
+                return (T) getConfig().getOptionalValue(key, clazzParam);
             }
 
             if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Supplier.class) && paramType.getActualTypeArguments().length == 1) {
-                Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                return (T) new ConfigSupplier(clazz, key, defaultValue, (ConfigImpl)getConfig());
+                return (T) new ConfigSupplier(clazzParam, key, defaultValue, (ConfigImpl)getConfig());
+            }
+
+            if (Set.class.equals(rawType)) {
+                return (T) new HashSet(getList(key, clazzParam));
+            }
+            if (List.class.equals(rawType)) {
+                return (T) getList(key, clazzParam);
             }
         }
         else {
@@ -135,6 +145,20 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         }
 
         throw new IllegalStateException("unhandled ConfigProperty");
+    }
+
+    private ArrayList getList(String key, Class clazzParam) {
+        Class arrayType = Array.newInstance(clazzParam, 0).getClass();
+
+        Object valueArray = getConfig().getValue(key, arrayType);
+        int length = Array.getLength(valueArray);
+
+        ArrayList list = new ArrayList(length);
+        for (int i = 0; i < length; i++) {
+            list.add(Array.get(valueArray, i));
+        }
+
+        return list;
     }
 
     private T getConfigValue(String key, String defaultValue, Class clazz) {

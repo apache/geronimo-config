@@ -17,9 +17,12 @@
 package org.apache.geronimo.config.converters;
 
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.config.spi.Converter;
 
@@ -31,7 +34,6 @@ import javax.config.spi.Converter;
 public abstract class ImplicitConverter {
 
     public static Converter getImplicitConverter(Class<?> clazz) {
-
         // handle ct with String param
         Converter converter = hasConverterCt(clazz, String.class);
         if (converter == null) {
@@ -98,5 +100,68 @@ public abstract class ImplicitConverter {
             // all fine
         }
         return null;
+    }
+
+    public static class ImplicitArrayConverter<T> implements Converter<T> {
+        private final Converter converter;
+        private final Class<?> type;
+
+        public ImplicitArrayConverter(Converter converter, Class<?> type) {
+            this.converter = converter;
+            this.type = type;
+        }
+
+        @Override
+        public T convert(String valueStr) {
+            if (valueStr == null)
+            {
+                return null;
+            }
+
+            List list = new ArrayList();
+            StringBuilder currentValue = new StringBuilder();
+            int length = valueStr.length();
+            for (int i = 0; i < length; i++)
+            {
+                char c = valueStr.charAt(i);
+                if (c == '\\')
+                {
+                    if (i < length - 1)
+                    {
+                        char nextC = valueStr.charAt(i + 1);
+                        currentValue.append(nextC);
+                        i++;
+                    }
+                }
+                else if (c == ',')
+                {
+                    String trimedVal = currentValue.toString().trim();
+                    if (trimedVal.length() > 0)
+                    {
+                        list.add(converter.convert(trimedVal));
+                    }
+
+                    currentValue.setLength(0);
+                }
+                else
+                {
+                    currentValue.append(c);
+                }
+            }
+
+            String trimedVal = currentValue.toString().trim();
+            if (trimedVal.length() > 0)
+            {
+                list.add(converter.convert(trimedVal));
+            }
+
+            // everything else is an Object array
+            Object array = Array.newInstance(type, list.size());
+            for (int i=0; i < list.size(); i++) {
+                Array.set(array, i, list.get(i));
+            }
+            return (T) array;
+        }
+
     }
 }
