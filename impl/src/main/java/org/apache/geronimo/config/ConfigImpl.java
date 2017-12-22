@@ -55,7 +55,7 @@ import javax.enterprise.inject.Vetoed;
  */
 @Typed
 @Vetoed
-public class ConfigImpl implements Config {
+public class ConfigImpl implements Config, AutoCloseable {
     protected Logger logger = Logger.getLogger(ConfigImpl.class.getName());
 
     protected List<ConfigSource> configSources = new ArrayList<>();
@@ -233,6 +233,48 @@ public class ConfigImpl implements Config {
         return converters;
     }
 
+
+    @Override
+    public void close() throws Exception {
+        List<Exception> exceptions = new ArrayList<>();
+
+        converters.values().stream()
+                .filter(c -> c instanceof AutoCloseable)
+                .map(AutoCloseable.class::cast)
+                .forEach(c -> {
+                    try {
+                        c.close();
+                    }
+                    catch (Exception e) {
+                        exceptions.add(e);
+                    }
+                });
+
+        configSources.stream()
+                .filter(c -> c instanceof AutoCloseable)
+                .map(AutoCloseable.class::cast)
+                .forEach(c -> {
+                    try {
+                        c.close();
+                    }
+                    catch (Exception e) {
+                        exceptions.add(e);
+                    }
+                });
+
+        if (!exceptions.isEmpty()) {
+            StringBuilder sb = new StringBuilder(1024);
+            sb.append("The following Exceptions got detected while shutting down the Config:\n");
+            for (Exception exception : exceptions) {
+                sb.append(exception.getClass().getName())
+                        .append(" ")
+                        .append(exception.getMessage())
+                        .append('\n');
+            }
+
+            throw new RuntimeException(sb.toString(), exceptions.get(0));
+        }
+    }
 
     private List<ConfigSource> sortDescending(List<ConfigSource> configSources) {
         configSources.sort(
