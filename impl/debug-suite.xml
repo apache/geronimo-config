@@ -23,7 +23,7 @@
 
     <classes>
         <!-- Issues in the spec -->
-        <class name="org.eclipse.configjsr.ArrayConverterTest">
+        <class name="org.eclipse.configjsr.PrivateImplicitConverterTest">
             <methods>
                 <include name=".*"/>
             </methods>

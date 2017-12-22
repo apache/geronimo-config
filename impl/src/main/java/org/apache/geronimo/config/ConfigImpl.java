@@ -20,12 +20,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,14 +37,8 @@ import org.apache.geronimo.config.converters.DoubleConverter;
 import org.apache.geronimo.config.converters.DurationConverter;
 import org.apache.geronimo.config.converters.FloatConverter;
 import org.apache.geronimo.config.converters.ImplicitConverter;
-import org.apache.geronimo.config.converters.InstantConverter;
 import org.apache.geronimo.config.converters.IntegerConverter;
-import org.apache.geronimo.config.converters.LocalDateConverter;
-import org.apache.geronimo.config.converters.LocalDateTimeConverter;
-import org.apache.geronimo.config.converters.LocalTimeConverter;
 import org.apache.geronimo.config.converters.LongConverter;
-import org.apache.geronimo.config.converters.OffsetDateTimeConverter;
-import org.apache.geronimo.config.converters.OffsetTimeConverter;
 import org.apache.geronimo.config.converters.StringConverter;
 import org.apache.geronimo.config.converters.URLConverter;
 import javax.config.Config;
@@ -93,12 +81,6 @@ public class ConfigImpl implements Config {
         converters.put(long.class, LongConverter.INSTANCE);
 
         converters.put(Duration.class, DurationConverter.INSTANCE);
-        converters.put(LocalTime.class, LocalTimeConverter.INSTANCE);
-        converters.put(LocalDate.class, LocalDateConverter.INSTANCE);
-        converters.put(LocalDateTime.class, LocalDateTimeConverter.INSTANCE);
-        converters.put(OffsetTime.class, OffsetTimeConverter.INSTANCE);
-        converters.put(OffsetDateTime.class, OffsetDateTimeConverter.INSTANCE);
-        converters.put(Instant.class, InstantConverter.INSTANCE);
 
         converters.put(URL.class, URLConverter.INSTANCE);
     }

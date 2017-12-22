@@ -80,18 +80,19 @@ public abstract class ImplicitConverter {
     private static Converter hasConverterMethod(Class<?> clazz, String methodName, Class<?> paramType) {
         // handle valueOf with CharSequence param
         try {
-            final Method method = clazz.getMethod(methodName, paramType);
+            final Method method = clazz.getDeclaredMethod(methodName, paramType);
             if (!method.isAccessible()) {
                 method.setAccessible(true);
             }
-            if (Modifier.isStatic(method.getModifiers())) {
+            if (Modifier.isStatic(method.getModifiers()) && method.getReturnType().equals(clazz)) {
                 return new Converter() {
                     @Override
                     public Object convert(String value) {
                         try {
                             return method.invoke(null, value);
                         } catch (Exception e) {
-                            throw new RuntimeException(e);
+                            throw new IllegalArgumentException("Error while converting the value " + value +
+                                    " to type " + method.getReturnType());
                         }
                     }
                 };
