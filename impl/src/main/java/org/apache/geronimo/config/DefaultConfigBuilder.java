@@ -80,6 +80,11 @@ public class DefaultConfigBuilder implements ConfigBuilder {
     }
 
     @Override
+    public <T> ConfigBuilder withConverter(Class<T> type, int priority, Converter<T> converter) {
+        return this;
+    }
+
+    @Override
     public ConfigBuilder addDiscoveredConverters() {
         ignoreDiscoveredConverters = false;
         return this;
