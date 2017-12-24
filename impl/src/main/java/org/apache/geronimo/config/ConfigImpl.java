@@ -16,6 +16,7 @@
  */
 package org.apache.geronimo.config;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -36,9 +37,11 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.geronimo.config.converters.BooleanConverter;
+import org.apache.geronimo.config.converters.ClassConverter;
 import org.apache.geronimo.config.converters.DoubleConverter;
 import org.apache.geronimo.config.converters.DurationConverter;
 import org.apache.geronimo.config.converters.FloatConverter;
@@ -70,10 +73,10 @@ import javax.enterprise.inject.Vetoed;
 public class ConfigImpl implements Config {
     protected Logger logger = Logger.getLogger(ConfigImpl.class.getName());
 
-    protected List<ConfigSource> configSources = new ArrayList<>();
-    protected Map<Type, Converter> converters = new HashMap<>();
-    protected Map<Type, Converter> implicitConverters = new ConcurrentHashMap<>();
-
+    protected final List<ConfigSource> configSources = new ArrayList<>();
+    protected final Map<Type, Converter> converters = new HashMap<>();
+    protected final Map<Type, Converter> implicitConverters = new ConcurrentHashMap<>();
+    private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",");
 
     public ConfigImpl() {
         registerDefaultConverter();
@@ -101,6 +104,7 @@ public class ConfigImpl implements Config {
         converters.put(Instant.class, InstantConverter.INSTANCE);
 
         converters.put(URL.class, URLConverter.INSTANCE);
+        converters.put(Class.class, ClassConverter.INSTANCE);
     }
 
 
@@ -143,11 +147,35 @@ public class ConfigImpl implements Config {
 
     public <T> T convert(String value, Class<T> asType) {
         if (value != null) {
-            Converter<T> converter = getConverter(asType);
-            return converter.convert(value);
+            if(asType.isArray()) {
+                Class<?> elementType = asType.getComponentType();
+                List<?> elements = convertList(value, elementType);
+                Object arrayInst = Array.newInstance(elementType, elements.size());
+                for (int i = 0; i < elements.size(); i++) {
+                    Array.set(arrayInst, i, elements.get(i));
+                }
+                return (T) arrayInst;
+            } else {
+                Converter<T> converter = getConverter(asType);
+                return converter.convert(value);
+            }
         }
-
         return null;
+    }
+
+    public <T> List<T> convertList(String rawValue, Class<T> arrayElementType) {
+        Converter<T> converter = getConverter(arrayElementType);
+        String[] parts = rawValue.split(ARRAY_SEPARATOR_REGEX);
+        if(parts.length == 0) {
+            return Collections.emptyList();
+        }
+        List<T> elements = new ArrayList<>(parts.length);
+        for (String part : parts) {
+            part = part.replace("\\,", ",");
+            T converted = converter.convert(part);
+            elements.add(converted);
+        }
+        return elements;
     }
 
     private <T> Converter getConverter(Class<T> asType) {
@@ -197,7 +225,10 @@ public class ConfigImpl implements Config {
         allConfigSources.addAll(configSourcesToAdd);
 
         // finally put all the configSources back into the map
-        configSources = sortDescending(allConfigSources);
+        synchronized (configSources) {
+            configSources.clear();
+            configSources.addAll(sortDescending(allConfigSources));
+        }
     }
 
 

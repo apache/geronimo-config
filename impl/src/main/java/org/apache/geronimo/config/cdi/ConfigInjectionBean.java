@@ -37,6 +37,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -111,22 +113,42 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         if (annotated.getBaseType() instanceof ParameterizedType) {
             ParameterizedType paramType = (ParameterizedType) annotated.getBaseType();
             Type rawType = paramType.getRawType();
+            if(rawType instanceof Class && paramType.getActualTypeArguments().length == 1) {
+                // handle Provider<T>
+                Class<?> rawTypeClass = ((Class<?>) rawType);
+                if (rawTypeClass.isAssignableFrom(Provider.class)) {
+                    Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
+                    return getConfigValue(key, defaultValue, clazz);
+                }
 
-            // handle Provider<T>
-            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Provider.class) && paramType.getActualTypeArguments().length == 1) {
-                Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                return getConfigValue(key, defaultValue, clazz);
-            }
+                // handle Optional<T>
+                if (rawTypeClass.isAssignableFrom(Optional.class)) {
+                    Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
+                    return (T) getConfig().getOptionalValue(key, clazz);
+                }
 
-            // handle Optional<T>
-            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Optional.class) && paramType.getActualTypeArguments().length == 1) {
-                Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                return (T) getConfig().getOptionalValue(key, clazz);
-            }
+                if (rawTypeClass.isAssignableFrom(Supplier.class)) {
+                    Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
+                    return (T) new ConfigSupplier(clazz, key, defaultValue, (ConfigImpl)getConfig());
+                }
 
-            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Supplier.class) && paramType.getActualTypeArguments().length == 1) {
-                Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                return (T) new ConfigSupplier(clazz, key, defaultValue, (ConfigImpl)getConfig());
+                if (rawTypeClass.isAssignableFrom(Set.class)) {
+                    Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
+
+                    // read the array type, convert it to a Set
+                    ConfigImpl config = (ConfigImpl) getConfig();
+                    String value = config.getValue(key);
+                    List<Object> elements = config.convertList(value, clazz);
+                    return (T)new LinkedHashSet<>(elements);
+                }
+
+                if (rawTypeClass.isAssignableFrom(List.class)) {
+                    Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
+                    // read the array type, convert it to a List
+                    ConfigImpl config = (ConfigImpl) getConfig();
+                    String value = config.getValue(key);
+                    return (T)config.convertList(value, clazz);
+                }
             }
         }
         else {
