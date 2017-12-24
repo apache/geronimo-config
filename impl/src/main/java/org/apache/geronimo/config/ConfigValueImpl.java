@@ -16,16 +16,15 @@
  */
 package org.apache.geronimo.config;
 
-import org.eclipse.microprofile.config.spi.Converter;
+import org.apache.geronimo.config.converters.MicroProfileTypedConverter;
 
+import javax.enterprise.inject.Typed;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import javax.enterprise.inject.Typed;
 
 /**
  * @author <a href="mailto:struberg@apache.org">Mark Struberg</a>
@@ -219,7 +218,7 @@ public class ConfigValueImpl<T> {
             return (T) value;
         }
 
-        Converter converter = config.getConverters().get(configEntryType);
+        MicroProfileTypedConverter converter = config.getConverters().get(configEntryType);
         if (converter == null) {
             throw new IllegalStateException("No Converter for type " + configEntryType);
         }

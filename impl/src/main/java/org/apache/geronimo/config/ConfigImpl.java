@@ -16,17 +16,16 @@
  */
 package org.apache.geronimo.config;
 
+import org.apache.geronimo.config.converters.ImplicitConverter;
+import org.apache.geronimo.config.converters.MicroProfileTypedConverter;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.spi.ConfigSource;
+import org.eclipse.microprofile.config.spi.Converter;
+
+import javax.enterprise.inject.Typed;
+import javax.enterprise.inject.Vetoed;
 import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.net.URL;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,30 +39,6 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.geronimo.config.converters.BooleanConverter;
-import org.apache.geronimo.config.converters.ClassConverter;
-import org.apache.geronimo.config.converters.DoubleConverter;
-import org.apache.geronimo.config.converters.DurationConverter;
-import org.apache.geronimo.config.converters.FloatConverter;
-import org.apache.geronimo.config.converters.ImplicitConverter;
-import org.apache.geronimo.config.converters.InstantConverter;
-import org.apache.geronimo.config.converters.IntegerConverter;
-import org.apache.geronimo.config.converters.LocalDateConverter;
-import org.apache.geronimo.config.converters.LocalDateTimeConverter;
-import org.apache.geronimo.config.converters.LocalTimeConverter;
-import org.apache.geronimo.config.converters.LongConverter;
-import org.apache.geronimo.config.converters.OffsetDateTimeConverter;
-import org.apache.geronimo.config.converters.OffsetTimeConverter;
-import org.apache.geronimo.config.converters.StringConverter;
-import org.apache.geronimo.config.converters.URLConverter;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.spi.ConfigSource;
-import org.eclipse.microprofile.config.spi.Converter;
-
-import javax.annotation.Priority;
-import javax.enterprise.inject.Typed;
-import javax.enterprise.inject.Vetoed;
-
 /**
  * @author <a href="mailto:struberg@apache.org">Mark Struberg</a>
  * @author <a href="mailto:johndament@apache.org">John D. Ament</a>
@@ -74,39 +49,9 @@ public class ConfigImpl implements Config {
     protected Logger logger = Logger.getLogger(ConfigImpl.class.getName());
 
     protected final List<ConfigSource> configSources = new ArrayList<>();
-    protected final Map<Type, Converter> converters = new HashMap<>();
+    protected final Map<Type, MicroProfileTypedConverter> converters = new HashMap<>();
     protected final Map<Type, Converter> implicitConverters = new ConcurrentHashMap<>();
     private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",");
-
-    public ConfigImpl() {
-        registerDefaultConverter();
-    }
-
-    private void registerDefaultConverter() {
-        converters.put(String.class, StringConverter.INSTANCE);
-        converters.put(Boolean.class, BooleanConverter.INSTANCE);
-        converters.put(boolean.class, BooleanConverter.INSTANCE);
-        converters.put(Double.class, DoubleConverter.INSTANCE);
-        converters.put(double.class, DoubleConverter.INSTANCE);
-        converters.put(Float.class, FloatConverter.INSTANCE);
-        converters.put(float.class, FloatConverter.INSTANCE);
-        converters.put(Integer.class, IntegerConverter.INSTANCE);
-        converters.put(int.class, IntegerConverter.INSTANCE);
-        converters.put(Long.class, LongConverter.INSTANCE);
-        converters.put(long.class, LongConverter.INSTANCE);
-
-        converters.put(Duration.class, DurationConverter.INSTANCE);
-        converters.put(LocalTime.class, LocalTimeConverter.INSTANCE);
-        converters.put(LocalDate.class, LocalDateConverter.INSTANCE);
-        converters.put(LocalDateTime.class, LocalDateTimeConverter.INSTANCE);
-        converters.put(OffsetTime.class, OffsetTimeConverter.INSTANCE);
-        converters.put(OffsetDateTime.class, OffsetDateTimeConverter.INSTANCE);
-        converters.put(Instant.class, InstantConverter.INSTANCE);
-
-        converters.put(URL.class, URLConverter.INSTANCE);
-        converters.put(Class.class, ClassConverter.INSTANCE);
-    }
-
 
     @Override
     public <T> Optional<T> getOptionalValue(String propertyName, Class<T> asType) {
@@ -179,7 +124,11 @@ public class ConfigImpl implements Config {
     }
 
     private <T> Converter getConverter(Class<T> asType) {
-        Converter converter = converters.get(asType);
+        MicroProfileTypedConverter microProfileTypedConverter = converters.get(asType);
+        Converter converter = null;
+        if(microProfileTypedConverter != null) {
+            converter = microProfileTypedConverter.getDelegate();
+        }
         if (converter == null) {
             converter = getImplicitConverter(asType);
         }
@@ -231,34 +180,7 @@ public class ConfigImpl implements Config {
         }
     }
 
-
-    public synchronized void addConverter(Converter<?> converter) {
-        if (converter == null) {
-            return;
-        }
-
-        Type targetType = getTypeOfConverter(converter.getClass());
-        if (targetType == null ) {
-            throw new IllegalStateException("Converter " + converter.getClass() + " must be a ParameterisedType");
-        }
-
-        Converter oldConverter = converters.get(targetType);
-        if (oldConverter == null || getPriority(converter) > getPriority(oldConverter)) {
-            converters.put(targetType, converter);
-        }
-    }
-
-    private int getPriority(Converter<?> converter) {
-        int priority = 100;
-        Priority priorityAnnotation = converter.getClass().getAnnotation(Priority.class);
-        if (priorityAnnotation != null) {
-            priority = priorityAnnotation.value();
-        }
-        return priority;
-    }
-
-
-    public Map<Type, Converter> getConverters() {
+    public Map<Type, MicroProfileTypedConverter> getConverters() {
         return converters;
     }
 
@@ -270,25 +192,7 @@ public class ConfigImpl implements Config {
 
     }
 
-    private Type getTypeOfConverter(Class clazz) {
-        if (clazz.equals(Object.class)) {
-            return null;
-        }
-
-        Type[] genericInterfaces = clazz.getGenericInterfaces();
-        for (Type genericInterface : genericInterfaces) {
-            if (genericInterface instanceof ParameterizedType) {
-                ParameterizedType pt = (ParameterizedType) genericInterface;
-                if (pt.getRawType().equals(Converter.class)) {
-                    Type[] typeArguments = pt.getActualTypeArguments();
-                    if (typeArguments.length != 1) {
-                        throw new IllegalStateException("Converter " + clazz + " must be a ParameterisedType");
-                    }
-                    return typeArguments[0];
-                }
-            }
-        }
-
-        return getTypeOfConverter(clazz.getSuperclass());
+    public void addConverter(Type type, MicroProfileTypedConverter<?> converter) {
+        converters.put(type, converter);
     }
 }
