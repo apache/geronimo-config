@@ -16,28 +16,28 @@
  */
 package org.apache.geronimo.config;
 
-import org.apache.geronimo.config.converters.ImplicitConverter;
+import org.apache.geronimo.config.converters.ImplicitArrayConverter;
 import org.apache.geronimo.config.converters.MicroProfileTypedConverter;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.spi.ConfigSource;
-import org.eclipse.microprofile.config.spi.Converter;
 
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
-import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static org.apache.geronimo.config.converters.ImplicitConverter.getImplicitConverter;
 
 /**
  * @author <a href="mailto:struberg@apache.org">Mark Struberg</a>
@@ -49,9 +49,9 @@ public class ConfigImpl implements Config {
     protected Logger logger = Logger.getLogger(ConfigImpl.class.getName());
 
     protected final List<ConfigSource> configSources = new ArrayList<>();
-    protected final Map<Type, MicroProfileTypedConverter> converters = new HashMap<>();
-    protected final Map<Type, Converter> implicitConverters = new ConcurrentHashMap<>();
+    protected final ConcurrentMap<Type, MicroProfileTypedConverter> converters = new ConcurrentHashMap<>();
     private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",");
+    private final ImplicitArrayConverter implicitArrayConverter = new ImplicitArrayConverter(this);
 
     @Override
     public <T> Optional<T> getOptionalValue(String propertyName, Class<T> asType) {
@@ -92,24 +92,13 @@ public class ConfigImpl implements Config {
 
     public <T> T convert(String value, Class<T> asType) {
         if (value != null) {
-            if(asType.isArray()) {
-                Class<?> elementType = asType.getComponentType();
-                List<?> elements = convertList(value, elementType);
-                Object arrayInst = Array.newInstance(elementType, elements.size());
-                for (int i = 0; i < elements.size(); i++) {
-                    Array.set(arrayInst, i, elements.get(i));
-                }
-                return (T) arrayInst;
-            } else {
-                Converter<T> converter = getConverter(asType);
-                return converter.convert(value);
-            }
+            return getConverter(asType).convert(value);
         }
         return null;
     }
 
     public <T> List<T> convertList(String rawValue, Class<T> arrayElementType) {
-        Converter<T> converter = getConverter(arrayElementType);
+        MicroProfileTypedConverter<T> converter = getConverter(arrayElementType);
         String[] parts = rawValue.split(ARRAY_SEPARATOR_REGEX);
         if(parts.length == 0) {
             return Collections.emptyList();
@@ -123,36 +112,21 @@ public class ConfigImpl implements Config {
         return elements;
     }
 
-    private <T> Converter getConverter(Class<T> asType) {
-        MicroProfileTypedConverter microProfileTypedConverter = converters.get(asType);
-        Converter converter = null;
-        if(microProfileTypedConverter != null) {
-            converter = microProfileTypedConverter.getDelegate();
-        }
-        if (converter == null) {
-            converter = getImplicitConverter(asType);
-        }
-        if (converter == null) {
+    private <T> MicroProfileTypedConverter<T> getConverter(Class<T> asType) {
+        MicroProfileTypedConverter<T> microProfileTypedConverter = converters.computeIfAbsent(asType, a -> handleMissingConverter(asType));
+        if (microProfileTypedConverter == null) {
             throw new IllegalArgumentException("No Converter registered for class " + asType);
         }
-        return converter;
+
+        return microProfileTypedConverter;
     }
 
-    private <T> Converter getImplicitConverter(Class<T> asType) {
-        Converter converter = implicitConverters.get(asType);
-        if (converter == null) {
-            synchronized (implicitConverters) {
-                converter = implicitConverters.get(asType);
-                if (converter == null) {
-                    // try to check whether the class is an 'implicit converter'
-                    converter = ImplicitConverter.getImplicitConverter(asType);
-                    if (converter != null) {
-                        implicitConverters.putIfAbsent(asType, converter);
-                    }
-                }
-            }
+    private <T> MicroProfileTypedConverter<T> handleMissingConverter(final Class<T> asType) {
+        if(asType.isArray()) {
+            return new MicroProfileTypedConverter<T>(value -> (T)implicitArrayConverter.convert(value, asType));
+        } else {
+            return getImplicitConverter(asType);
         }
-        return converter;
     }
 
     public ConfigValueImpl<String> access(String key) {
@@ -183,7 +157,6 @@ public class ConfigImpl implements Config {
     public Map<Type, MicroProfileTypedConverter> getConverters() {
         return converters;
     }
-
 
     private List<ConfigSource> sortDescending(List<ConfigSource> configSources) {
         configSources.sort(

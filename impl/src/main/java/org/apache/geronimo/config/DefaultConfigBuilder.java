@@ -75,7 +75,7 @@ public class DefaultConfigBuilder implements ConfigBuilder {
     private boolean ignoreDefaultSources = true;
     private boolean ignoreDiscoveredSources = true;
     private boolean ignoreDiscoveredConverters = true;
-    private final Map<Type, MicroProfileTypedConverter<?>> wrappedConverters = new HashMap<>();
+    private final Map<Type, MicroProfileTypedConverter<?>> registeredConverters = new HashMap<>();
 
     public DefaultConfigBuilder() {
         this.registerDefaultConverters();
@@ -121,9 +121,9 @@ public class DefaultConfigBuilder implements ConfigBuilder {
     }
 
     private <T> ConfigBuilder registerConverter(Type type, MicroProfileTypedConverter<T> microProfileTypedConverter) {
-        MicroProfileTypedConverter<?> existing = wrappedConverters.get(type);
+        MicroProfileTypedConverter<?> existing = registeredConverters.get(type);
         if(existing == null || microProfileTypedConverter.getPriority() > existing.getPriority()) {
-            wrappedConverters.put(type, microProfileTypedConverter);
+            registeredConverters.put(type, microProfileTypedConverter);
         }
         return this;
     }
@@ -169,7 +169,7 @@ public class DefaultConfigBuilder implements ConfigBuilder {
         ConfigImpl config = new ConfigImpl();
         config.addConfigSources(configSources);
 
-        for (Map.Entry<Type, MicroProfileTypedConverter<?>> entry : wrappedConverters.entrySet()) {
+        for (Map.Entry<Type, MicroProfileTypedConverter<?>> entry : registeredConverters.entrySet()) {
             config.addConverter(entry.getKey(), entry.getValue());
         }
 
@@ -187,28 +187,28 @@ public class DefaultConfigBuilder implements ConfigBuilder {
     }
 
     private void registerDefaultConverters() {
-        wrappedConverters.put(String.class, new MicroProfileTypedConverter<>(StringConverter.INSTANCE));
-        wrappedConverters.put(Boolean.class, new MicroProfileTypedConverter<>(BooleanConverter.INSTANCE));
-        wrappedConverters.put(boolean.class, new MicroProfileTypedConverter<>(BooleanConverter.INSTANCE));
-        wrappedConverters.put(Double.class, new MicroProfileTypedConverter<>(DoubleConverter.INSTANCE));
-        wrappedConverters.put(double.class, new MicroProfileTypedConverter<>(DoubleConverter.INSTANCE));
-        wrappedConverters.put(Float.class, new MicroProfileTypedConverter<>(FloatConverter.INSTANCE));
-        wrappedConverters.put(float.class, new MicroProfileTypedConverter<>(FloatConverter.INSTANCE));
-        wrappedConverters.put(Integer.class, new MicroProfileTypedConverter<>(IntegerConverter.INSTANCE));
-        wrappedConverters.put(int.class, new MicroProfileTypedConverter<>(IntegerConverter.INSTANCE));
-        wrappedConverters.put(Long.class, new MicroProfileTypedConverter<>(LongConverter.INSTANCE));
-        wrappedConverters.put(long.class, new MicroProfileTypedConverter<>(LongConverter.INSTANCE));
+        registeredConverters.put(String.class, new MicroProfileTypedConverter<>(StringConverter.INSTANCE));
+        registeredConverters.put(Boolean.class, new MicroProfileTypedConverter<>(BooleanConverter.INSTANCE));
+        registeredConverters.put(boolean.class, new MicroProfileTypedConverter<>(BooleanConverter.INSTANCE));
+        registeredConverters.put(Double.class, new MicroProfileTypedConverter<>(DoubleConverter.INSTANCE));
+        registeredConverters.put(double.class, new MicroProfileTypedConverter<>(DoubleConverter.INSTANCE));
+        registeredConverters.put(Float.class, new MicroProfileTypedConverter<>(FloatConverter.INSTANCE));
+        registeredConverters.put(float.class, new MicroProfileTypedConverter<>(FloatConverter.INSTANCE));
+        registeredConverters.put(Integer.class, new MicroProfileTypedConverter<>(IntegerConverter.INSTANCE));
+        registeredConverters.put(int.class, new MicroProfileTypedConverter<>(IntegerConverter.INSTANCE));
+        registeredConverters.put(Long.class, new MicroProfileTypedConverter<>(LongConverter.INSTANCE));
+        registeredConverters.put(long.class, new MicroProfileTypedConverter<>(LongConverter.INSTANCE));
 
-        wrappedConverters.put(Duration.class, new MicroProfileTypedConverter<>(DurationConverter.INSTANCE));
-        wrappedConverters.put(LocalTime.class, new MicroProfileTypedConverter<>(LocalTimeConverter.INSTANCE));
-        wrappedConverters.put(LocalDate.class, new MicroProfileTypedConverter<>(LocalDateConverter.INSTANCE));
-        wrappedConverters.put(LocalDateTime.class, new MicroProfileTypedConverter<>(LocalDateTimeConverter.INSTANCE));
-        wrappedConverters.put(OffsetTime.class, new MicroProfileTypedConverter<>(OffsetTimeConverter.INSTANCE));
-        wrappedConverters.put(OffsetDateTime.class, new MicroProfileTypedConverter<>(OffsetDateTimeConverter.INSTANCE));
-        wrappedConverters.put(Instant.class, new MicroProfileTypedConverter<>(InstantConverter.INSTANCE));
+        registeredConverters.put(Duration.class, new MicroProfileTypedConverter<>(DurationConverter.INSTANCE));
+        registeredConverters.put(LocalTime.class, new MicroProfileTypedConverter<>(LocalTimeConverter.INSTANCE));
+        registeredConverters.put(LocalDate.class, new MicroProfileTypedConverter<>(LocalDateConverter.INSTANCE));
+        registeredConverters.put(LocalDateTime.class, new MicroProfileTypedConverter<>(LocalDateTimeConverter.INSTANCE));
+        registeredConverters.put(OffsetTime.class, new MicroProfileTypedConverter<>(OffsetTimeConverter.INSTANCE));
+        registeredConverters.put(OffsetDateTime.class, new MicroProfileTypedConverter<>(OffsetDateTimeConverter.INSTANCE));
+        registeredConverters.put(Instant.class, new MicroProfileTypedConverter<>(InstantConverter.INSTANCE));
 
-        wrappedConverters.put(URL.class, new MicroProfileTypedConverter<>(URLConverter.INSTANCE));
-        wrappedConverters.put(Class.class, new MicroProfileTypedConverter<>(ClassConverter.INSTANCE));
+        registeredConverters.put(URL.class, new MicroProfileTypedConverter<>(URLConverter.INSTANCE));
+        registeredConverters.put(Class.class, new MicroProfileTypedConverter<>(ClassConverter.INSTANCE));
     }
 
     private Type getTypeOfConverter(Class clazz) {

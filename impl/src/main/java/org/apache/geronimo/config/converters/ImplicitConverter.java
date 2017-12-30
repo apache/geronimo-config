@@ -29,10 +29,10 @@ import org.eclipse.microprofile.config.spi.Converter;
  */
 public abstract class ImplicitConverter {
 
-    public static Converter getImplicitConverter(Class<?> clazz) {
+    public static <T> MicroProfileTypedConverter<T> getImplicitConverter(Class<T> clazz) {
 
         // handle ct with String param
-        Converter converter = hasConverterCt(clazz, String.class);
+        Converter<T> converter = hasConverterCt(clazz, String.class);
         if (converter == null) {
             converter = hasConverterCt(clazz, CharSequence.class);
         }
@@ -48,24 +48,23 @@ public abstract class ImplicitConverter {
         if (converter == null) {
             converter = hasConverterMethod(clazz, "parse", CharSequence.class);
         }
-
-        return converter;
+        if (converter == null) {
+            return null;
+        }
+        return new MicroProfileTypedConverter<T>(converter, 100);
     }
 
-    private static Converter hasConverterCt(Class<?> clazz, Class<?> paramType) {
+    private static <T> Converter<T> hasConverterCt(Class<T> clazz, Class<?> paramType) {
         try {
             final Constructor<?> declaredConstructor = clazz.getDeclaredConstructor(paramType);
             if (!declaredConstructor.isAccessible()) {
                 declaredConstructor.setAccessible(true);
             }
-            return new Converter() {
-                @Override
-                public Object convert(String value) {
-                    try {
-                        return declaredConstructor.newInstance(value);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+            return value -> {
+                try {
+                    return (T)declaredConstructor.newInstance(value);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             };
         } catch (NoSuchMethodException e) {
@@ -74,7 +73,7 @@ public abstract class ImplicitConverter {
         return null;
     }
 
-    private static Converter hasConverterMethod(Class<?> clazz, String methodName, Class<?> paramType) {
+    private static <T> Converter<T> hasConverterMethod(Class<T> clazz, String methodName, Class<?> paramType) {
         // handle valueOf with CharSequence param
         try {
             final Method method = clazz.getMethod(methodName, paramType);
@@ -82,14 +81,11 @@ public abstract class ImplicitConverter {
                 method.setAccessible(true);
             }
             if (Modifier.isStatic(method.getModifiers())) {
-                return new Converter() {
-                    @Override
-                    public Object convert(String value) {
-                        try {
-                            return method.invoke(null, value);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+                return value -> {
+                    try {
+                        return (T)method.invoke(null, value);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
                     }
                 };
             }

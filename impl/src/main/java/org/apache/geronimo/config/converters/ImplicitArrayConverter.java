@@ -19,37 +19,24 @@
 
 package org.apache.geronimo.config.converters;
 
-import org.eclipse.microprofile.config.spi.Converter;
+import org.apache.geronimo.config.ConfigImpl;
 
-import javax.annotation.Priority;
+import java.lang.reflect.Array;
+import java.util.List;
 
-public class MicroProfileTypedConverter<T> {
-    private final Converter<T> delegate;
-    private final int priority;
+public class ImplicitArrayConverter {
+    private final ConfigImpl config;
 
-    public MicroProfileTypedConverter(Converter<T> delegate) {
-        this(delegate, readPriority(delegate));
+    public ImplicitArrayConverter(ConfigImpl config) {
+        this.config = config;
     }
-
-    public MicroProfileTypedConverter(Converter<T> delegate, int priority) {
-        this.delegate = delegate;
-        this.priority = priority;
-    }
-
-    public int getPriority() {
-        return priority;
-    }
-
-    private static <T> int readPriority(Converter<T> delegate) {
-        Priority priority = delegate.getClass().getAnnotation(Priority.class);
-        if(priority != null) {
-            return priority.value();
-        } else {
-            return 100;
+    public Object convert(String value, Class<?> asType) {
+        Class<?> elementType = asType.getComponentType();
+        List<?> elements = config.convertList(value, elementType);
+        Object arrayInst = Array.newInstance(elementType, elements.size());
+        for (int i = 0; i < elements.size(); i++) {
+            Array.set(arrayInst, i, elements.get(i));
         }
-    }
-
-    public T convert(String value) {
-        return delegate.convert(value);
+        return arrayInst;
     }
 }
