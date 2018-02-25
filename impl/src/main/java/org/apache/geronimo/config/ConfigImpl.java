@@ -23,15 +23,22 @@ import org.eclipse.microprofile.config.spi.ConfigSource;
 
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
+
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -52,6 +59,9 @@ public class ConfigImpl implements Config {
     protected final ConcurrentMap<Type, MicroProfileTypedConverter> converters = new ConcurrentHashMap<>();
     private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",");
     private final ImplicitArrayConverter implicitArrayConverter = new ImplicitArrayConverter(this);
+
+    private List<WeakReference<Consumer<Set<String>>>> configChangedListeners = new ArrayList<>();
+    private ReadWriteLock configListenerLock = new ReentrantReadWriteLock();
 
     @Override
     public <T> Optional<T> getOptionalValue(String propertyName, Class<T> asType) {
@@ -167,5 +177,30 @@ public class ConfigImpl implements Config {
 
     public void addConverter(Type type, MicroProfileTypedConverter<?> converter) {
         converters.put(type, converter);
+    }
+
+    @Override
+    public void registerConfigChangedListener(Consumer<Set<String>> configChangedListener) {
+        configListenerLock.writeLock().lock();
+        try {
+            Iterator<WeakReference<Consumer<Set<String>>>> it = configChangedListeners.iterator();
+            while (it.hasNext()) {
+                WeakReference<Consumer<Set<String>>> changeListenerRef = it.next();
+                Consumer<Set<String>> changeListener = changeListenerRef.get();
+                if (changeListener == null) {
+                    it.remove();
+                }
+                else {
+                    if (changeListener == configChangedListener) {
+                        // changeListener already got registered
+                        return;
+                    }
+                }
+            }
+            configChangedListeners.add(new WeakReference<>(configChangedListener));
+        }
+        finally {
+            configListenerLock.writeLock().unlock();;
+        }
     }
 }

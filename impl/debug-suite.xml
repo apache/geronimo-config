@@ -24,7 +24,7 @@
     <classes>
         <!-- Issues in the spec -->
         <!-- CDI-437 -->
-        <class name="org.eclipse.microprofile.config.tck.AutoDiscoveredConfigSourceTest">
+        <class name="org.eclipse.microprofile.config.tck.DynamicConfigSourceTest">
             <methods>
                 <include name=".*"/>
             </methods>
