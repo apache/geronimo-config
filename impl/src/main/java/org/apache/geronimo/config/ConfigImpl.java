@@ -155,6 +155,8 @@ public class ConfigImpl implements Config {
 
     public synchronized void addConfigSources(List<ConfigSource> configSourcesToAdd) {
         List<ConfigSource> allConfigSources = new ArrayList<>(configSources);
+
+        configSourcesToAdd.forEach(cs -> cs.setOnAttributeChange(this::reportConfigChange));
         allConfigSources.addAll(configSourcesToAdd);
 
         // finally put all the configSources back into the map
@@ -201,6 +203,30 @@ public class ConfigImpl implements Config {
         }
         finally {
             configListenerLock.writeLock().unlock();;
+        }
+    }
+
+    /**
+     * This method gets called back from a ConfigSource if the ConfigSource
+     * did detect a config change
+     */
+    public void reportConfigChange(Set<String> changedAttributeNames) {
+        configListenerLock.readLock().lock();
+        try {
+            Iterator<WeakReference<Consumer<Set<String>>>> it = configChangedListeners.iterator();
+            while (it.hasNext()) {
+                WeakReference<Consumer<Set<String>>> changeListenerRef = it.next();
+                Consumer<Set<String>> changeListener = changeListenerRef.get();
+                if (changeListener == null) {
+                    it.remove();
+                }
+                else {
+                    changeListener.accept(changedAttributeNames);
+                }
+            }
+        }
+        finally {
+            configListenerLock.readLock().unlock();
         }
     }
 }
