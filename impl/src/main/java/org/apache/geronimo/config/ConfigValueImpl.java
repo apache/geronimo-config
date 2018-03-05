@@ -16,6 +16,7 @@
  */
 package org.apache.geronimo.config;
 
+import javax.config.ConfigValue;
 import javax.config.spi.Converter;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ import javax.enterprise.inject.Typed;
  * @author <a href="mailto:struberg@apache.org">Mark Struberg</a>
  */
 @Typed
-public class ConfigValueImpl<T> {
+public class ConfigValueImpl<T> implements ConfigValue<T> {
     private static final Logger logger = Logger.getLogger(ConfigValueImpl.class.getName());
 
     private final ConfigImpl config;
@@ -46,7 +47,7 @@ public class ConfigValueImpl<T> {
 
     private boolean evaluateVariables = false;
 
-    private long cacheTimeMs = -1;
+    private long cacheTimeNs = -1;
     private volatile long reloadAfter = -1;
     private T lastValue = null;
     private ConfigChanged valueChangeListener;
@@ -56,20 +57,20 @@ public class ConfigValueImpl<T> {
         this.keyOriginal = key;
     }
 
-    //X @Override
+    @Override
     public <N> ConfigValueImpl<N> as(Class<N> clazz) {
         configEntryType = clazz;
         return (ConfigValueImpl<N>) this;
     }
 
 
-    //X @Override
+    @Override
     public ConfigValueImpl<T> cacheFor(long value, TimeUnit timeUnit) {
-        this.cacheTimeMs = timeUnit.toMillis(value);
+        this.cacheTimeNs = timeUnit.toNanos(value);
         return this;
     }
 
-    //X @Override
+    @Override
     public ConfigValueImpl<T> evaluateVariables(boolean evaluateVariables) {
         this.evaluateVariables = evaluateVariables;
         return this;
@@ -80,29 +81,22 @@ public class ConfigValueImpl<T> {
         return this;
     }
 
-    //X @Override
-    public T get() {
-        T val = getValue();
-        if (val == null) {
-            throw new NoSuchElementException("No config value present for key " + keyOriginal);
-        }
-        return val;
+    @Override
+    public Optional<T> getOptionalValue() {
+        return Optional.ofNullable(get());
     }
 
-    //X @Override
-    public Optional<T> getOptional() {
-        return Optional.ofNullable(getValue());
-    }
-
-    //X @Override
+    @Override
     public ConfigValueImpl<T> onChange(ConfigChanged valueChangeListener) {
         this.valueChangeListener = valueChangeListener;
         return this;
     }
 
+    
+
     //X @Override
     public List<T> getValueList() {
-        String rawList = (String) getValue(false);
+        String rawList = (String) get(false);
         List<T> values = new ArrayList<T>();
         StringBuilder sb = new StringBuilder(64);
         for (int i= 0; i < rawList.length(); i++) {
@@ -140,15 +134,24 @@ public class ConfigValueImpl<T> {
         sb.setLength(0);
     }
 
-    public T getValue() {
-        return getValue(true);
+    public T get() {
+        return get(true);
     }
 
-    private T getValue(boolean convert) {
+    @Override
+    public T getValue() {
+        T val = get();
+        if (val == null) {
+            throw new NoSuchElementException("No config value present for key " + keyOriginal);
+        }
+        return val;
+    }
+
+    private T get(boolean convert) {
         long now = -1;
-        if (cacheTimeMs > 0)
+        if (cacheTimeNs > 0)
         {
-            now = System.currentTimeMillis();
+            now = System.nanoTime();
             if (now <= reloadAfter)
             {
                 return lastValue;
@@ -165,9 +168,9 @@ public class ConfigValueImpl<T> {
 
         lastValue = value;
 
-        if (cacheTimeMs > 0)
+        if (cacheTimeNs > 0)
         {
-            reloadAfter = now + cacheTimeMs;
+            reloadAfter = now + cacheTimeNs;
         }
 
         return value;
@@ -225,14 +228,6 @@ public class ConfigValueImpl<T> {
         }
 
         return (T) converter.convert(value);
-    }
-
-    /**
-     * TODO feedback from gunnar: could be interesting to have this functionality also as Config#onChange(ConfigChanged)
-     * Callback which can be used with {@link #onChange(ConfigChanged)}
-     */
-    interface ConfigChanged {
-        <T> void onValueChange(String key, T oldValue, T newValue);
     }
 
 }
