@@ -43,7 +43,7 @@ public class DefaultConfigProvider extends ConfigProviderResolver {
 
     @Override
     public Config getConfig() {
-        return getConfig(null);
+        return getConfig(Thread.currentThread().getContextClassLoader());
     }
 
 
