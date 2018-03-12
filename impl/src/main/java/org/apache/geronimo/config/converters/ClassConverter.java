@@ -33,7 +33,11 @@ public class ClassConverter implements Converter<Class>{
             return null;
         }
         try {
-            return Class.forName(value);
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            if (loader == null) {
+                return Class.forName(value);
+            }
+            return Class.forName(value, true, loader);
         } catch (ClassNotFoundException e) {
             throw new IllegalArgumentException(e);
         }
