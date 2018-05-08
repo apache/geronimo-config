@@ -16,13 +16,16 @@
  */
 package org.apache.geronimo.config;
 
+import javax.config.ConfigSnapshot;
 import javax.config.ConfigValue;
 import javax.config.spi.Converter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -51,6 +54,16 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
     private volatile long reloadAfter = -1;
     private T lastValue = null;
     private ConfigChanged valueChangeListener;
+    private boolean isList;
+    private boolean isSet;
+
+    private T defaultValue;
+    private boolean withDefault;
+
+    /**
+     * Alternative Converter to be used instead of the default converter
+     */
+    private Converter<T> converter;
 
     public ConfigValueImpl(ConfigImpl config, String key) {
         this.config = config;
@@ -63,6 +76,68 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
         return (ConfigValueImpl<N>) this;
     }
 
+    @Override
+    public ConfigValue<List<T>> asList() {
+        isList = true;
+        ConfigValue<List<T>> listTypedResolver = (ConfigValue<List<T>>) this;
+
+        if (defaultValue == null)
+        {
+            // the default for lists is an empty list instead of null
+            return listTypedResolver.withDefault(Collections.<T>emptyList());
+        }
+
+        return listTypedResolver;
+    }
+
+    @Override
+    public ConfigValue<Set<T>> asSet() {
+        isSet = true;
+        ConfigValue<Set<T>> listTypedResolver = (ConfigValue<Set<T>>) this;
+
+        if (defaultValue == null)
+        {
+            // the default for lists is an empty list instead of null
+            return listTypedResolver.withDefault(Collections.<T>emptySet());
+        }
+
+        return listTypedResolver;
+    }
+
+    @Override
+    public ConfigValue<T> withDefault(T value) {
+        defaultValue = value;
+        withDefault = true;
+        return this;
+    }
+
+    @Override
+    public ConfigValue<T> withStringDefault(String value) {
+        if (value == null || value.isEmpty()) {
+            throw new RuntimeException("Empty String or null supplied as string-default value for property "
+                    + keyOriginal);
+        }
+
+        if (isList) {
+            defaultValue = splitAndConvertListValue(value);
+        }
+        else {
+            defaultValue = convert(value);
+        }
+        withDefault = true;
+        return this;
+    }
+
+    @Override
+    public T getDefaultValue() {
+        return defaultValue;
+    }
+
+    @Override
+    public ConfigValue<T> useConverter(Converter<T> converter) {
+        this.converter = converter;
+        return this;
+    }
 
     @Override
     public ConfigValueImpl<T> cacheFor(long value, TimeUnit timeUnit) {
@@ -91,8 +166,6 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
         this.valueChangeListener = valueChangeListener;
         return this;
     }
-
-    
 
     //X @Override
     public List<T> getValueList() {
@@ -146,6 +219,21 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
         }
         return val;
     }
+
+    @Override
+    public T getValue(ConfigSnapshot configSnapshot) {
+        ConfigSnapshotImpl snapshotImpl = (ConfigSnapshotImpl) configSnapshot;
+
+        if (!snapshotImpl.getConfigValues().containsKey(this))
+        {
+            throw new IllegalArgumentException("The TypedResolver for key " + getKey() +
+                    " does not belong the given ConfigSnapshot!");
+        }
+
+        return (T) snapshotImpl.getConfigValues().get(this);
+    }
+
+
 
     private T get(boolean convert) {
         long now = -1;
@@ -218,6 +306,10 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
     }
 
     private T convert(String value) {
+        if (converter != null) {
+            return converter.convert(value);
+        }
+
         if (String.class == configEntryType) {
             return (T) value;
         }
@@ -228,6 +320,45 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
         }
 
         return (T) converter.convert(value);
+    }
+
+
+    private T splitAndConvertListValue(String valueStr) {
+        if (valueStr == null) {
+            return null;
+        }
+
+        List list = new ArrayList();
+        StringBuilder currentValue = new StringBuilder();
+        int length = valueStr.length();
+        for (int i = 0; i < length; i++) {
+            char c = valueStr.charAt(i);
+            if (c == '\\') {
+                if (i < length - 1) {
+                    char nextC = valueStr.charAt(i + 1);
+                    currentValue.append(nextC);
+                    i++;
+                }
+            }
+            else if (c == ',') {
+                String trimedVal = currentValue.toString().trim();
+                if (trimedVal.length() > 0) {
+                    list.add(convert(trimedVal));
+                }
+
+                currentValue.setLength(0);
+            }
+            else {
+                currentValue.append(c);
+            }
+        }
+
+        String trimedVal = currentValue.toString().trim();
+        if (trimedVal.length() > 0) {
+            list.add(convert(trimedVal));
+        }
+
+        return (T) list;
     }
 
 }
