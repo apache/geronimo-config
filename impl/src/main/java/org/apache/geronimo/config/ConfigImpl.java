@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,6 +43,8 @@ import org.apache.geronimo.config.converters.LongConverter;
 import org.apache.geronimo.config.converters.StringConverter;
 import org.apache.geronimo.config.converters.URLConverter;
 import javax.config.Config;
+import javax.config.ConfigSnapshot;
+import javax.config.ConfigValue;
 import javax.config.spi.ConfigSource;
 import javax.config.spi.Converter;
 
@@ -61,6 +64,9 @@ public class ConfigImpl implements Config, AutoCloseable {
     protected List<ConfigSource> configSources = new ArrayList<>();
     protected Map<Type, Converter> converters = new HashMap<>();
     protected Map<Type, Converter> implicitConverters = new ConcurrentHashMap<>();
+
+    // volatile to a.) make the read/write behave atomic and b.) guarantee multi-thread safety
+    private volatile long lastChanged = 0;
 
 
     public ConfigImpl() {
@@ -94,6 +100,30 @@ public class ConfigImpl implements Config, AutoCloseable {
             value = null;
         }
         return Optional.ofNullable(convert(value, asType));
+    }
+
+    @Override
+    public ConfigSnapshot snapshotFor(ConfigValue<?>... configValues) {
+        // we implement kind of optimistic Locking
+        // Means we try multiple time to resolve all the given values
+        // until the config didn't change inbetween.
+        for (int tries = 1; tries < 5; tries++)
+        {
+            Map<ConfigValue<?>, Object> resolved = new HashMap<>();
+            long startReadLastChanged = lastChanged;
+            for (ConfigValue configValue : configValues)
+            {
+                resolved.put(configValue, configValue.getValue());
+            }
+
+            if (startReadLastChanged == lastChanged)
+            {
+                return new ConfigSnapshotImpl(resolved);
+            }
+        }
+
+        throw new IllegalStateException(
+                "Could not resolve ConfigTransaction as underlying values are permanently changing!");
     }
 
     @Override
@@ -188,7 +218,10 @@ public class ConfigImpl implements Config, AutoCloseable {
 
     public synchronized void addConfigSources(List<ConfigSource> configSourcesToAdd) {
         List<ConfigSource> allConfigSources = new ArrayList<>(configSources);
-        allConfigSources.addAll(configSourcesToAdd);
+        for (ConfigSource configSource : configSourcesToAdd) {
+            configSource.setOnAttributeChange(this::onAttributeChange);
+            allConfigSources.add(configSource);
+        }
 
         // finally put all the configSources back into the map
         configSources = sortDescending(allConfigSources);
@@ -304,5 +337,21 @@ public class ConfigImpl implements Config, AutoCloseable {
 
         return getTypeOfConverter(clazz.getSuperclass());
     }
+
+    public void onAttributeChange(Set<String> attributesChanged)
+    {
+        // this is to force an incremented lastChanged even on time glitches and fast updates
+        long newLastChanged = System.nanoTime();
+        lastChanged = lastChanged >= newLastChanged ? lastChanged++ : newLastChanged;
+    }
+
+    /**
+     * @return the nanoTime when the last change got reported by a ConfigSource
+     */
+    public long getLastChanged()
+    {
+        return lastChanged;
+    }
+
 
 }

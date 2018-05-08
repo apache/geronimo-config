@@ -98,6 +98,10 @@
                         <HISTTIMEFORMAT>value-for-tck-since-we-ignore-empty</HISTTIMEFORMAT>
                         <INSTANCE>value-for-tck-since-we-ignore-empty</INSTANCE>
                         <UPSTART_INSTANCE>value-for-tck-since-we-ignore-empty</UPSTART_INSTANCE>
+                        <envconfig_my_int_property>45</envconfig_my_int_property>
+                        <ENVCONFIG_MY_BOOLEAN_PROPERTY>true</ENVCONFIG_MY_BOOLEAN_PROPERTY>
+                        <ENVCONFIG_MY_STRING_PROPERTY>woohoo</ENVCONFIG_MY_STRING_PROPERTY>
+                        <envconfig_my_string_property>haha</envconfig_my_string_property>
                     </environmentVariables>
                     <systemPropertyVariables>
                         <!-- TCKs assume it but this is not really a good option for prod -->

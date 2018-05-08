@@ -58,9 +58,13 @@ public class SystemEnvConfigSource extends BaseConfigSource {
     public String getValue(String key) {
         String val = configValues.get(key);
         if (val == null) {
-            val = configValues.get(key.replace('.', '_'));
+            key = key.replace('.', '_');
+            val = configValues.get(key);
         }
-
+        if (val == null) {
+           key = key.toUpperCase();
+           val = configValues.get(key);
+        }
         return val;
     }
 }

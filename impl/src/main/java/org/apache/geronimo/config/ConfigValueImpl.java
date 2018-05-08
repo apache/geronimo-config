@@ -52,8 +52,10 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
 
     private long cacheTimeNs = -1;
     private volatile long reloadAfter = -1;
+    private long lastReloadedAt = -1;
+
     private T lastValue = null;
-    private ConfigChanged valueChangeListener;
+    //X will later get added again private ConfigChanged valueChangeListener;
     private boolean isList;
     private boolean isSet;
 
@@ -161,11 +163,13 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
         return Optional.ofNullable(get());
     }
 
-    @Override
+    //X will later get added again @Override
+    /*X
     public ConfigValueImpl<T> onChange(ConfigChanged valueChangeListener) {
         this.valueChangeListener = valueChangeListener;
         return this;
     }
+    */
 
     //X @Override
     public List<T> getValueList() {
@@ -242,23 +246,32 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
             now = System.nanoTime();
             if (now <= reloadAfter)
             {
-                return lastValue;
+                // now check if anything in the underlying Config got changed
+                long lastCfgChange = config.getLastChanged();
+                if (lastCfgChange < lastReloadedAt)
+                {
+                    return lastValue;
+                }
             }
         }
 
         String valueStr = resolveStringValue();
         T value = convert ? convert(valueStr) : (T) valueStr;
 
+        //X will later get added again
+        /*X
         if (valueChangeListener != null && (value != null && !value.equals(lastValue) || (value == null && lastValue != null)) )
         {
             valueChangeListener.onValueChange(keyOriginal, lastValue, value);
         }
+        */
 
         lastValue = value;
 
         if (cacheTimeNs > 0)
         {
             reloadAfter = now + cacheTimeNs;
+            lastReloadedAt = now;
         }
 
         return value;
