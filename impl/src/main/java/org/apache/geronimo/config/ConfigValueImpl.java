@@ -256,6 +256,10 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
         }
 
         String valueStr = resolveStringValue();
+        if ((valueStr == null || valueStr.isEmpty()) && withDefault) {
+            return defaultValue;
+        }
+
         T value = convert ? convert(valueStr) : (T) valueStr;
 
         //X will later get added again
@@ -278,10 +282,49 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
     }
 
     private String resolveStringValue() {
-        //X TODO implement lookupChain
+        String value = null;
 
-        String value = config.getValue(keyOriginal);
-        if (evaluateVariables)
+        if (lookupChain != null) {
+            // first we resolve the value
+            List<String> postfixVals = new ArrayList<>();
+            for (String postfix : lookupChain) {
+                if (postfix.startsWith("${") && postfix.length() > 3) {
+                    String varName = postfix.substring(2, postfix.length()-1);
+                    String varValue = config.getValue(varName);
+                    if (varValue != null && varValue.length() > 0) {
+                        postfixVals.add(varValue);
+                    }
+                }
+                else {
+                    postfixVals.add(postfix);
+                }
+            }
+
+            // binary count down
+            for (int mask = (1 << postfixVals.size()) - 1; mask > 0; mask--) {
+                StringBuilder sb = new StringBuilder(keyOriginal);
+                for (int loc = 0; loc < postfixVals.size(); loc++) {
+                    int bitPos = 1 << (postfixVals.size() - loc - 1);
+                    if ((mask & bitPos) > 0) {
+                        sb.append('.').append(postfixVals.get(loc));
+                    }
+                }
+
+                value = config.getValue(sb.toString());
+                if (value != null && value.length() > 0) {
+                    keyResolved = sb.toString();
+                    break;
+                }
+            }
+
+        }
+
+        if (value == null) {
+            value = config.getValue(keyOriginal);
+            this.keyResolved = keyOriginal;
+        }
+
+        if (evaluateVariables && value != null)
         {
             // recursively resolve any ${varName} in the value
             int startVar = 0;
