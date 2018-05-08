@@ -58,7 +58,7 @@ public class SystemEnvConfigSource extends BaseConfigSource {
     public String getValue(String key) {
         String val = configValues.get(key);
         if (val == null) {
-            val = configValues.get(key.replace('.', '_'));
+            val = configValues.get(key.replaceAll("[^Aa-zZ0-9]", "_"));
         }
 
         return val;

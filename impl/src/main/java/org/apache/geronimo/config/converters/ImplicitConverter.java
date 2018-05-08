@@ -16,7 +16,6 @@
  */
 package org.apache.geronimo.config.converters;
 
-
 import org.eclipse.microprofile.config.spi.Converter;
 
 import java.lang.reflect.Array;
@@ -52,7 +51,6 @@ public abstract class ImplicitConverter {
         if (converter == null) {
             converter = hasConverterMethod(clazz, "parse", CharSequence.class);
         }
-
         return converter;
     }
 
