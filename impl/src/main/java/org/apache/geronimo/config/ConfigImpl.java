@@ -156,7 +156,7 @@ public class ConfigImpl implements Config {
     public synchronized void addConfigSources(List<ConfigSource> configSourcesToAdd) {
         List<ConfigSource> allConfigSources = new ArrayList<>(configSources);
 
-        configSourcesToAdd.forEach(cs -> cs.setOnAttributeChange(this::reportConfigChange));
+        // TODO(To Be Fixed): configSourcesToAdd.forEach(cs -> cs.setOnAttributeChange(this::reportConfigChange));
         allConfigSources.addAll(configSourcesToAdd);
 
         // finally put all the configSources back into the map
@@ -181,7 +181,7 @@ public class ConfigImpl implements Config {
         converters.put(type, converter);
     }
 
-    @Override
+    // TODO(to be fixed) @Override
     public void registerConfigChangedListener(Consumer<Set<String>> configChangedListener) {
         configListenerLock.writeLock().lock();
         try {

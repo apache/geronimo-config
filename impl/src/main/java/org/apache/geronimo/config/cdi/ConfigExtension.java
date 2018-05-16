@@ -16,6 +16,8 @@
  */
 package org.apache.geronimo.config.cdi;
 
+import static java.util.stream.Collectors.toList;
+
 import org.apache.geronimo.config.DefaultConfigProvider;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -29,18 +31,24 @@ import javax.enterprise.inject.spi.BeforeShutdown;
 import javax.enterprise.inject.spi.DeploymentException;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
+import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionPoint;
 import javax.inject.Provider;
+
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>
@@ -60,6 +68,18 @@ public class ConfigExtension implements Extension {
     }
 
     private Set<InjectionPoint> injectionPoints = new HashSet<>();
+    private Set<Class<?>> proxies = new HashSet<>();
+    private List<Class<?>> validProxies;
+    private List<ProxyBean<?>> proxyBeans;
+
+
+    public void findProxies(@Observes ProcessAnnotatedType<?> pat) {
+        final Class<?> javaClass = pat.getAnnotatedType().getJavaClass();
+        if (javaClass.isInterface() &&
+                Stream.of(javaClass.getMethods()).anyMatch(m -> m.isAnnotationPresent(ConfigProperty.class))) {
+            proxies.add(javaClass);
+        }
+    }
 
 
     public void collectConfigProducer(@Observes ProcessInjectionPoint<?, ?> pip) {
@@ -85,12 +105,24 @@ public class ConfigExtension implements Extension {
         types.stream()
                 .map(type -> new ConfigInjectionBean(bm, type))
                 .forEach(abd::addBean);
+
+        validProxies = proxies.stream()
+                .filter(this::isValidProxy)
+                .collect(toList());
+        if (validProxies.size() == proxies.size()) {
+            proxyBeans = validProxies.stream()
+                                     .map((Function<Class<?>, ? extends ProxyBean<?>>) ProxyBean::new)
+                                     .collect(toList());
+            proxyBeans.forEach(abd::addBean);
+        } // else there are errors
     }
 
     public void validate(@Observes AfterDeploymentValidation add) {
         List<String> deploymentProblems = new ArrayList<>();
 
         config = ConfigProvider.getConfig();
+        proxyBeans.forEach(b -> b.init(config));
+        proxyBeans.clear();
 
         for (InjectionPoint injectionPoint : injectionPoints) {
             Type type = injectionPoint.getType();
@@ -115,12 +147,23 @@ public class ConfigExtension implements Extension {
                                                              + String.join("\n", deploymentProblems)));
         }
 
+        if (validProxies.size() != proxies.size()) {
+            proxies.stream()
+                   .filter(p -> !validProxies.contains(p))
+                   .forEach(p -> add.addDeploymentProblem(
+                           new DeploymentException("Invalid proxy: " + p + ". All method should have @ConfigProperty.")));
+        }
+        proxies.clear();
     }
 
     public void shutdown(@Observes BeforeShutdown bsd) {
         DefaultConfigProvider.instance().releaseConfig(config);
     }
 
+    private boolean isValidProxy(final Class<?> api) {
+        return Stream.of(api.getMethods())
+                     .allMatch(m -> m.isAnnotationPresent(ConfigProperty.class) || Object.class == m.getDeclaringClass());
+    }
 
     static boolean isDefaultUnset(String defaultValue) {
         return defaultValue.equals(ConfigProperty.UNCONFIGURED_VALUE);
