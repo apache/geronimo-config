@@ -17,7 +17,7 @@
 package org.apache.geronimo.config;
 
 import javax.config.ConfigSnapshot;
-import javax.config.ConfigValue;
+import javax.config.ConfigAccessor;
 import javax.config.spi.Converter;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ import javax.enterprise.inject.Typed;
  * @author <a href="mailto:struberg@apache.org">Mark Struberg</a>
  */
 @Typed
-public class ConfigValueImpl<T> implements ConfigValue<T> {
+public class ConfigValueImpl<T> implements ConfigAccessor<T> {
     private static final Logger logger = Logger.getLogger(ConfigValueImpl.class.getName());
 
     private final ConfigImpl config;
@@ -79,9 +79,9 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
     }
 
     @Override
-    public ConfigValue<List<T>> asList() {
+    public ConfigAccessor<List<T>> asList() {
         isList = true;
-        ConfigValue<List<T>> listTypedResolver = (ConfigValue<List<T>>) this;
+        ConfigAccessor<List<T>> listTypedResolver = (ConfigAccessor<List<T>>) this;
 
         if (defaultValue == null)
         {
@@ -93,9 +93,9 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
     }
 
     @Override
-    public ConfigValue<Set<T>> asSet() {
+    public ConfigAccessor<Set<T>> asSet() {
         isSet = true;
-        ConfigValue<Set<T>> listTypedResolver = (ConfigValue<Set<T>>) this;
+        ConfigAccessor<Set<T>> listTypedResolver = (ConfigAccessor<Set<T>>) this;
 
         if (defaultValue == null)
         {
@@ -107,14 +107,14 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
     }
 
     @Override
-    public ConfigValue<T> withDefault(T value) {
+    public ConfigAccessor<T> withDefault(T value) {
         defaultValue = value;
         withDefault = true;
         return this;
     }
 
     @Override
-    public ConfigValue<T> withStringDefault(String value) {
+    public ConfigAccessor<T> withStringDefault(String value) {
         if (value == null || value.isEmpty()) {
             throw new RuntimeException("Empty String or null supplied as string-default value for property "
                     + keyOriginal);
@@ -136,7 +136,7 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
     }
 
     @Override
-    public ConfigValue<T> useConverter(Converter<T> converter) {
+    public ConfigAccessor<T> useConverter(Converter<T> converter) {
         this.converter = converter;
         return this;
     }
@@ -230,7 +230,7 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
 
         if (!snapshotImpl.getConfigValues().containsKey(this))
         {
-            throw new IllegalArgumentException("The TypedResolver for key " + getKey() +
+            throw new IllegalArgumentException("The TypedResolver for key " + getPropertyName() +
                     " does not belong the given ConfigSnapshot!");
         }
 
@@ -352,12 +352,12 @@ public class ConfigValueImpl<T> implements ConfigValue<T> {
     }
 
     //X @Override
-    public String getKey() {
+    public String getPropertyName() {
         return keyOriginal;
     }
 
     //X @Override
-    public String getResolvedKey() {
+    public String getResolvedPropertyName() {
         return keyResolved;
     }
 

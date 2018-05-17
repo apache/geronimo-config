@@ -44,7 +44,7 @@ import org.apache.geronimo.config.converters.StringConverter;
 import org.apache.geronimo.config.converters.URLConverter;
 import javax.config.Config;
 import javax.config.ConfigSnapshot;
-import javax.config.ConfigValue;
+import javax.config.ConfigAccessor;
 import javax.config.spi.ConfigSource;
 import javax.config.spi.Converter;
 
@@ -103,15 +103,15 @@ public class ConfigImpl implements Config, AutoCloseable {
     }
 
     @Override
-    public ConfigSnapshot snapshotFor(ConfigValue<?>... configValues) {
+    public ConfigSnapshot snapshotFor(ConfigAccessor<?>... configValues) {
         // we implement kind of optimistic Locking
         // Means we try multiple time to resolve all the given values
         // until the config didn't change inbetween.
         for (int tries = 1; tries < 5; tries++)
         {
-            Map<ConfigValue<?>, Object> resolved = new HashMap<>();
+            Map<ConfigAccessor<?>, Object> resolved = new HashMap<>();
             long startReadLastChanged = lastChanged;
-            for (ConfigValue configValue : configValues)
+            for (ConfigAccessor configValue : configValues)
             {
                 resolved.put(configValue, configValue.getValue());
             }

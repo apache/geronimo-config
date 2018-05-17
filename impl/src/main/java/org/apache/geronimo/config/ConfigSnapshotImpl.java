@@ -21,19 +21,19 @@ package org.apache.geronimo.config;
 import java.util.Map;
 
 import javax.config.ConfigSnapshot;
-import javax.config.ConfigValue;
+import javax.config.ConfigAccessor;
 
 
 public class ConfigSnapshotImpl implements ConfigSnapshot
 {
-    private final Map<ConfigValue<?>, Object> configValues;
+    private final Map<ConfigAccessor<?>, Object> configValues;
 
-    public ConfigSnapshotImpl(Map<ConfigValue<?>, Object> configValues)
+    public ConfigSnapshotImpl(Map<ConfigAccessor<?>, Object> configValues)
     {
         this.configValues = configValues;
     }
 
-    public Map<ConfigValue<?>, Object> getConfigValues()
+    public Map<ConfigAccessor<?>, Object> getConfigValues()
     {
         return configValues;
     }
