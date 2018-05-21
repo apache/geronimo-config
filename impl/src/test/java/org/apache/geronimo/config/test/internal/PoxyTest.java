@@ -16,7 +16,10 @@
  */
 package org.apache.geronimo.config.test.internal;
 
+import static java.util.Arrays.asList;
 import static org.testng.Assert.assertEquals;
+
+import java.util.Collection;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -32,11 +35,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class PoxyTest extends Arquillian {
+    private static final String LIST_KEY = SomeProxy.class.getName() + ".list";
     private static final String SOME_KEY = SomeProxy.class.getName() + ".key";
     private static final String SOME_OTHER_KEY = SomeProxy.class.getName() + ".key2";
 
     @Deployment
     public static WebArchive deploy() {
+        System.setProperty(LIST_KEY, "a,b,1");
         System.setProperty(SOME_KEY, "yeah");
         System.setProperty(SOME_OTHER_KEY, "123");
         JavaArchive testJar = ShrinkWrap
@@ -58,6 +63,8 @@ public class PoxyTest extends Arquillian {
         assertEquals(proxy.renamed(), "yeah");
         assertEquals(proxy.key2(), 123);
         assertEquals(proxy.key3(), "def");
+        assertEquals(proxy.list(), asList("a", "b", "1"));
+        assertEquals(proxy.listDefaults(), asList(1, 2, 1));
     }
 
     public interface SomeProxy {
@@ -72,5 +79,11 @@ public class PoxyTest extends Arquillian {
 
         @ConfigProperty(name = "org.apache.geronimo.config.test.internal.PoxyTest$SomeProxy.key")
         String renamed();
+
+        @ConfigProperty
+        Collection<String> list();
+
+        @ConfigProperty(defaultValue = "1,2,1")
+        Collection<Integer> listDefaults();
     }
 }

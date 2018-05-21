@@ -17,17 +17,25 @@
 package org.apache.geronimo.config.cdi;
 
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import org.apache.geronimo.config.ConfigImpl;
 import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 public class ConfigurationHandler implements InvocationHandler {
@@ -61,30 +69,63 @@ public class ConfigurationHandler implements InvocationHandler {
     private static class MethodMeta {
         private final String key;
         private final Object defaultValue;
-        private final Class type;
+        private final Class lookupType;
+        private final Class collectionConversionType;
+        private final Collector<Object, ?, ? extends Collection<Object>> collectionCollector;
+
         private final boolean optional;
 
         private MethodMeta(final Method m) {
             final ConfigProperty annotation = m.getAnnotation(ConfigProperty.class);
             optional = Optional.class == m.getReturnType();
-            type = optional ?
-                    Class.class.cast(ParameterizedType.class.cast(m.getGenericReturnType()).getActualTypeArguments()[0]) :
-                    m.getReturnType();
+            final Type type = optional ?
+                    ParameterizedType.class.cast(m.getGenericReturnType()).getActualTypeArguments()[0] :
+                    m.getGenericReturnType();
+
+            if (Class.class.isInstance(type)) {
+                lookupType = Class.class.cast(type);
+                collectionCollector = null;
+                collectionConversionType = null;
+            } else if (ParameterizedType.class.isInstance(type)) {
+                final ParameterizedType pt = ParameterizedType.class.cast(type);
+                final Type rawType = pt.getRawType();
+                if (!Class.class.isInstance(rawType)) {
+                    throw new IllegalArgumentException("Unsupported parameterized type: " + type);
+                }
+
+                final Class<?> clazz = Class.class.cast(pt.getRawType());
+                if (Collection.class.isAssignableFrom(clazz)) {
+                    collectionConversionType = Class.class.cast(pt.getActualTypeArguments()[0]);
+                    lookupType = String.class;
+                    if (Set.class.isAssignableFrom(clazz)) {
+                        collectionCollector = toSet();
+                    } else {
+                        collectionCollector = toList();
+                    }
+                } else {
+                    throw new IllegalArgumentException("Unsupported parameterized type: " + type + ", did you want a Collection?");
+                }
+            } else {
+                throw new IllegalArgumentException("Unsupported type: " + type);
+            }
+
             key = annotation.name().isEmpty() ? m.getDeclaringClass().getName() + "." + m.getName() : annotation.name();
             final boolean hasDefault = !annotation.defaultValue().equals(ConfigProperty.UNCONFIGURED_VALUE);
-            if (type == long.class || type == Long.class) {
+            if (lookupType == long.class || lookupType == Long.class) {
                 defaultValue = hasDefault ? Long.parseLong(annotation.defaultValue()) : 0L;
-            } else if (type == int.class || type == Integer.class) {
+            } else if (lookupType == int.class || lookupType == Integer.class) {
                 defaultValue = hasDefault ? Integer.parseInt(annotation.defaultValue()) : 0;
-            } else if (type == double.class || type == Double.class) {
+            } else if (lookupType == double.class || lookupType == Double.class) {
                 defaultValue = hasDefault ? Double.parseDouble(annotation.defaultValue()) : 0.;
-            } else if (type == float.class || type == Float.class) {
+            } else if (lookupType == float.class || lookupType == Float.class) {
                 defaultValue = hasDefault ? Float.parseFloat(annotation.defaultValue()) : 0f;
-            } else if (type == short.class || type == Short.class) {
+            } else if (lookupType == short.class || lookupType == Short.class) {
                 defaultValue = hasDefault ? Short.parseShort(annotation.defaultValue()) : (short) 0;
-            } else if (type == char.class || type == Character.class) {
-                defaultValue = hasDefault ? annotation.defaultValue().charAt(0) : (type == char.class ? (char) 0 : null);
-            } else if (type == String.class) {
+            } else if (lookupType == char.class || lookupType == Character.class) {
+                defaultValue = hasDefault ? annotation.defaultValue().charAt(0) : (lookupType == char.class ? (char) 0 : null);
+            } else if (collectionCollector != null) {
+                defaultValue = hasDefault ? convert(annotation.defaultValue(), ConfigProvider.getConfig()) : null;
+            } else if (lookupType == String.class) {
                 defaultValue = hasDefault ? annotation.defaultValue() : null;
             } else if (hasDefault) {
                 throw new IllegalArgumentException("Unsupported default for " + m);
@@ -94,11 +135,35 @@ public class ConfigurationHandler implements InvocationHandler {
         }
 
         Object read(final Config config) {
-            final Optional optionalValue = config.getOptionalValue(key, type);
+            final Optional optionalValue = config.getOptionalValue(key, lookupType);
             if (optional) {
-                return optionalValue;
+                return processOptional(optionalValue, config);
             }
-            return optionalValue.orElse(defaultValue);
+            return processOptional(optionalValue, config).orElse(defaultValue);
+        }
+
+        private Optional processOptional(final Optional<?> optionalValue, final Config config) {
+            if (collectionCollector != null) {
+                return optionalValue.map(String.class::cast).map(v -> convert(v, config));
+            }
+            return optionalValue;
+        }
+
+        private Collection<?> convert(final String o, final Config config) {
+            final String[] values = o.split(",");
+            return Stream.of(values)
+                    .map(v -> mapValue(v, config))
+                    .collect(collectionCollector);
+        }
+
+        private Object mapValue(final String raw, final Config config) {
+            if (String.class == collectionConversionType) {
+                return raw;
+            }
+            if (ConfigImpl.class.isInstance(config)) {
+                return ConfigImpl.class.cast(config).convert(raw, collectionConversionType);
+            }
+            throw new IllegalArgumentException("Unsupported conversion if config instance is not a ConfigImpl: " + collectionConversionType);
         }
     }
 }
