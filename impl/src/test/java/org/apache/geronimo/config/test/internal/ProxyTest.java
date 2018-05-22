@@ -22,7 +22,6 @@ import static org.testng.Assert.assertEquals;
 import java.util.Collection;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -31,10 +30,9 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class PoxyTest extends Arquillian {
+public class ProxyTest extends Arquillian {
     private static final String LIST_KEY = SomeProxy.class.getName() + ".list";
     private static final String SOME_KEY = SomeProxy.class.getName() + ".key";
     private static final String SOME_OTHER_KEY = SomeProxy.class.getName() + ".key2";
@@ -46,7 +44,7 @@ public class PoxyTest extends Arquillian {
         System.setProperty(SOME_OTHER_KEY, "123");
         JavaArchive testJar = ShrinkWrap
                 .create(JavaArchive.class, "PoxyTest.jar")
-                .addClasses(PoxyTest.class, SomeProxy.class)
+                .addClasses(ProxyTest.class, SomeProxy.class)
                 .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
 
         return ShrinkWrap
@@ -77,7 +75,7 @@ public class PoxyTest extends Arquillian {
         @ConfigProperty
         String key();
 
-        @ConfigProperty(name = "org.apache.geronimo.config.test.internal.PoxyTest$SomeProxy.key")
+        @ConfigProperty(name = "org.apache.geronimo.config.test.internal.ProxyTest$SomeProxy.key")
         String renamed();
 
         @ConfigProperty
