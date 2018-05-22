@@ -39,18 +39,22 @@ public class ProxyTest extends Arquillian {
 
     @Deployment
     public static WebArchive deploy() {
+        System.setProperty("prefix.val", "yes");
         System.setProperty(LIST_KEY, "a,b,1");
         System.setProperty(SOME_KEY, "yeah");
         System.setProperty(SOME_OTHER_KEY, "123");
         JavaArchive testJar = ShrinkWrap
                 .create(JavaArchive.class, "PoxyTest.jar")
-                .addClasses(ProxyTest.class, SomeProxy.class)
+                .addClasses(ProxyTest.class, SomeProxy.class, PrefixedSomeProxy.class)
                 .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
 
         return ShrinkWrap
                 .create(WebArchive.class, "providerTest.war")
                 .addAsLibrary(testJar);
     }
+
+    @Inject
+    private PrefixedSomeProxy prefixed;
 
     @Inject
     private SomeProxy proxy;
@@ -63,6 +67,17 @@ public class ProxyTest extends Arquillian {
         assertEquals(proxy.key3(), "def");
         assertEquals(proxy.list(), asList("a", "b", "1"));
         assertEquals(proxy.listDefaults(), asList(1, 2, 1));
+    }
+
+    @Test
+    public void prefix() {
+        assertEquals(prefixed.val(), "yes");
+    }
+
+    @ConfigProperty(name = "prefix.")
+    public interface PrefixedSomeProxy {
+        @ConfigProperty(name = "val")
+        String val();
     }
 
     public interface SomeProxy {

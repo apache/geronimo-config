@@ -16,6 +16,7 @@
  */
 package org.apache.geronimo.config.cdi;
 
+import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -44,9 +45,13 @@ public class ConfigurationHandler implements InvocationHandler {
 
     ConfigurationHandler(final Config config, final Class<?> api) {
         this.config = config;
+
+        final String prefix = ofNullable(api.getAnnotation(ConfigProperty.class))
+                .map(ConfigProperty::name)
+                .orElse("");
         this.methodMetas = Stream.of(api.getMethods())
             .filter(m -> m.isAnnotationPresent(ConfigProperty.class))
-            .collect(toMap(identity(), MethodMeta::new));
+            .collect(toMap(identity(), e -> new MethodMeta(e, prefix)));
     }
 
     @Override
@@ -75,7 +80,7 @@ public class ConfigurationHandler implements InvocationHandler {
 
         private final boolean optional;
 
-        private MethodMeta(final Method m) {
+        private MethodMeta(final Method m, final String prefix) {
             final ConfigProperty annotation = m.getAnnotation(ConfigProperty.class);
             optional = Optional.class == m.getReturnType();
             final Type type = optional ?
@@ -109,7 +114,7 @@ public class ConfigurationHandler implements InvocationHandler {
                 throw new IllegalArgumentException("Unsupported type: " + type);
             }
 
-            key = annotation.name().isEmpty() ? m.getDeclaringClass().getName() + "." + m.getName() : annotation.name();
+            key = prefix + (annotation.name().isEmpty() ? m.getDeclaringClass().getName() + "." + m.getName() : annotation.name());
             final boolean hasDefault = !annotation.defaultValue().equals(ConfigProperty.UNCONFIGURED_VALUE);
             if (lookupType == long.class || lookupType == Long.class) {
                 defaultValue = hasDefault ? Long.parseLong(annotation.defaultValue()) : 0L;
