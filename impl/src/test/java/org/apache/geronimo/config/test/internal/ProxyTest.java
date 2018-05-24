@@ -67,6 +67,7 @@ public class ProxyTest extends Arquillian {
         assertEquals(proxy.key3(), "def");
         assertEquals(proxy.list(), asList("a", "b", "1"));
         assertEquals(proxy.listDefaults(), asList(1, 2, 1));
+        assertEquals(proxy.listClasses(), asList(String.class, Integer.class));
     }
 
     @Test
@@ -95,6 +96,9 @@ public class ProxyTest extends Arquillian {
 
         @ConfigProperty
         Collection<String> list();
+
+        @ConfigProperty(defaultValue = "java.lang.String,java.lang.Integer")
+        Collection<Class<?>> listClasses();
 
         @ConfigProperty(defaultValue = "1,2,1")
         Collection<Integer> listDefaults();

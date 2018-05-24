@@ -100,7 +100,10 @@ public class ConfigurationHandler implements InvocationHandler {
 
                 final Class<?> clazz = Class.class.cast(pt.getRawType());
                 if (Collection.class.isAssignableFrom(clazz)) {
-                    collectionConversionType = Class.class.cast(pt.getActualTypeArguments()[0]);
+                    final Type arg0 = pt.getActualTypeArguments()[0];
+                    collectionConversionType = Class.class.cast(ParameterizedType.class.isInstance(arg0) ?
+                            // mainly to tolerate Class<?> as an arg
+                            ParameterizedType.class.cast(arg0).getRawType() : Class.class.cast(arg0));
                     lookupType = String.class;
                     if (Set.class.isAssignableFrom(clazz)) {
                         collectionCollector = toSet();
