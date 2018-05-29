@@ -22,6 +22,7 @@ import javax.config.spi.Converter;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -119,6 +120,7 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
             throw new RuntimeException("Empty String or null supplied as string-default value for property "
                     + keyOriginal);
         }
+        value = replaceVariables(value);
 
         if (isList) {
             defaultValue = splitAndConvertListValue(value);
@@ -256,11 +258,21 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
         }
 
         String valueStr = resolveStringValue();
+
         if ((valueStr == null || valueStr.isEmpty()) && withDefault) {
             return defaultValue;
         }
 
-        T value = convert ? convert(valueStr) : (T) valueStr;
+        T value;
+        if (isList || isSet) {
+            value = splitAndConvertListValue(valueStr);
+            if (isSet) {
+                value = (T) new HashSet((List) value);
+            }
+        }
+        else {
+            value = convert ? convert(valueStr) : (T) valueStr;
+        }
 
         //X will later get added again
         /*X
@@ -326,27 +338,34 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
 
         if (evaluateVariables && value != null)
         {
-            // recursively resolve any ${varName} in the value
-            int startVar = 0;
-            while ((startVar = value.indexOf("${", startVar)) >= 0)
+            value = replaceVariables(value);
+
+        }
+        return value;
+    }
+
+    private String replaceVariables(String value)
+    {
+        // recursively resolve any ${varName} in the value
+        int startVar = 0;
+        while ((startVar = value.indexOf("${", startVar)) >= 0)
+        {
+            int endVar = value.indexOf("}", startVar);
+            if (endVar <= 0)
             {
-                int endVar = value.indexOf("}", startVar);
-                if (endVar <= 0)
-                {
-                    break;
-                }
-                String varName = value.substring(startVar + 2, endVar);
-                if (varName.isEmpty())
-                {
-                    break;
-                }
-                String variableValue = config.access(varName).evaluateVariables(true).get();
-                if (variableValue != null)
-                {
-                    value = value.replace("${" + varName + "}", variableValue);
-                }
-                startVar++;
+                break;
             }
+            String varName = value.substring(startVar + 2, endVar);
+            if (varName.isEmpty())
+            {
+                break;
+            }
+            String variableValue = config.access(varName).evaluateVariables(true).get();
+            if (variableValue != null)
+            {
+                value = value.replace("${" + varName + "}", variableValue);
+            }
+            startVar++;
         }
         return value;
     }
@@ -370,12 +389,7 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
             return (T) value;
         }
 
-        Converter converter = config.getConverters().get(configEntryType);
-        if (converter == null) {
-            throw new IllegalStateException("No Converter for type " + configEntryType);
-        }
-
-        return (T) converter.convert(value);
+        return (T) config.convert(value, configEntryType);
     }
 
 
