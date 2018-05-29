@@ -30,21 +30,50 @@ public final class Placeholders {
         while ((startVar = value.indexOf("${", startVar)) >= 0)
         {
             int endVar = value.indexOf("}", startVar);
-            if (endVar <= 0)
+            if (endVar < startVar)
             {
-                break;
+                return value;
             }
-            String varName = value.substring(startVar + 2, endVar);
+            int endStart = startVar;
+            int nestedPlaceholder;
+            do {
+                nestedPlaceholder = value.indexOf("${", endStart + 1);
+                if (nestedPlaceholder > 0 && nestedPlaceholder < endVar) { // then we grabbed the end of this placeholder
+                    endVar = value.indexOf("}", nestedPlaceholder + 1); // end nested placeholder
+                    if (endVar < startVar) {
+                        return value;
+                    }
+                    endVar = value.indexOf("}", endVar + 1); // end of the enclosing placeholder
+                    if (endVar < startVar) { // broken value pby
+                        return value;
+                    }
+                    endStart = endVar;
+                } else {
+                    break;
+                }
+            } while (true);
+
+            int defaultSep = value.indexOf(':', startVar);
+            boolean hasDefault = defaultSep > 0 && defaultSep < endVar;
+            String varName = value.substring(startVar + 2, hasDefault ? defaultSep : endVar);
             if (varName.isEmpty())
             {
-                break;
+                return value;
             }
+
             String variableValue = config.getOptionalValue(varName, String.class).orElse(null);
+            if (variableValue == null && hasDefault) {
+                variableValue = value.substring(defaultSep + 1, endVar);
+            }
+
             if (variableValue != null)
             {
-                value = value.replace("${" + varName + "}", variableValue);
+                final String old = value;
+                value = value.substring(0, startVar) + variableValue + value.substring(endVar + 1);
+                if (value.equals(old)) { // avoid loops
+                    return value;
+                }
             }
-            startVar++;
         }
         return value;
     }
