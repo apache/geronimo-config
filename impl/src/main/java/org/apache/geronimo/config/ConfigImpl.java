@@ -286,11 +286,20 @@ public class ConfigImpl implements Config, AutoCloseable {
         }
     }
 
+    /**
+     * ConfigSources are sorted with descending ordinal.
+     * If 2 ConfigSources have the same ordinal, then they get sorted according to their name, alphabetically.
+     */
     private List<ConfigSource> sortDescending(List<ConfigSource> configSources) {
         configSources.sort(
-                (configSource1, configSource2) -> (configSource1.getOrdinal() > configSource2.getOrdinal()) ? -1 : 1);
+                (configSource1, configSource2) -> {
+                    int compare = Integer.compare(configSource2.getOrdinal(), configSource1.getOrdinal());
+                    if (compare == 0) {
+                        return configSource1.getName().compareTo(configSource2.getName());
+                    }
+                    return compare;
+                });
         return configSources;
-
     }
 
     private Type getTypeOfConverter(Class clazz) {
