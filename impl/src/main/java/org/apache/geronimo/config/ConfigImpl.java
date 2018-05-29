@@ -102,14 +102,14 @@ public class ConfigImpl implements Config {
 
     public <T> T convert(String value, Class<T> asType) {
         if (value != null) {
-            return getConverter(asType).convert(value);
+            return getConverter(asType).convert(Placeholders.replace(this, value));
         }
         return null;
     }
 
     public <T> List<T> convertList(String rawValue, Class<T> arrayElementType) {
         MicroProfileTypedConverter<T> converter = getConverter(arrayElementType);
-        String[] parts = rawValue.split(ARRAY_SEPARATOR_REGEX);
+        String[] parts = Placeholders.replace(this, rawValue).split(ARRAY_SEPARATOR_REGEX);
         if(parts.length == 0) {
             return Collections.emptyList();
         }

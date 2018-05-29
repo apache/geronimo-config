@@ -46,6 +46,7 @@ public class ArrayTypeTest extends Arquillian {
     public static WebArchive deploy() {
         System.setProperty(SOME_KEY, "1,2,3");
         System.setProperty(SOME_OTHER_KEY, "1,2\\,3");
+        System.setProperty("placeholder", "4,5,6");
         JavaArchive testJar = ShrinkWrap
                 .create(JavaArchive.class, "arrayTest.jar")
                 .addClasses(ArrayTypeTest.class, SomeBean.class)
@@ -66,6 +67,7 @@ public class ArrayTypeTest extends Arquillian {
         Assert.assertEquals(someBean.getIntValues(), asList(1,2,3));
         Assert.assertEquals(someBean.getIntSet(), new LinkedHashSet<>(asList(1,2,3)));
         Assert.assertEquals(someBean.getIntSetDefault(), new LinkedHashSet<>(asList(1,2,3)));
+        Assert.assertEquals(someBean.getIntSetPlaceholderDefault(), new LinkedHashSet<>(asList(4,5,6)));
     }
 
     @Test
@@ -89,8 +91,12 @@ public class ArrayTypeTest extends Arquillian {
         private Set<Integer> intSet;
 
         @Inject
-        @ConfigProperty(name=SOME_KEY, defaultValue = "1,2,3")
+        @ConfigProperty(name=SOME_KEY + ".missing", defaultValue = "1,2,3")
         private Set<Integer> intSetDefault;
+
+        @Inject
+        @ConfigProperty(name=SOME_KEY + ".missing", defaultValue = "${placeholder}")
+        private Set<Integer> intSetPlaceholderDefault;
 
         @Inject
         @ConfigProperty(name=SOME_KEY)
@@ -99,6 +105,10 @@ public class ArrayTypeTest extends Arquillian {
         @Inject
         @ConfigProperty(name=SOME_OTHER_KEY)
         private List<String> values;
+
+        public Set<Integer> getIntSetPlaceholderDefault() {
+            return intSetPlaceholderDefault;
+        }
 
         public Set<Integer> getIntSetDefault() {
             return intSetDefault;

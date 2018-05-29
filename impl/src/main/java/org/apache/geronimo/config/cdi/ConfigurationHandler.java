@@ -35,6 +35,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import org.apache.geronimo.config.ConfigImpl;
+import org.apache.geronimo.config.Placeholders;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -118,27 +119,35 @@ public class ConfigurationHandler implements InvocationHandler {
             }
 
             key = prefix + (annotation.name().isEmpty() ? m.getDeclaringClass().getName() + "." + m.getName() : annotation.name());
-            final boolean hasDefault = !annotation.defaultValue().equals(ConfigProperty.UNCONFIGURED_VALUE);
-            if (lookupType == long.class || lookupType == Long.class) {
-                defaultValue = hasDefault ? Long.parseLong(annotation.defaultValue()) : 0L;
-            } else if (lookupType == int.class || lookupType == Integer.class) {
-                defaultValue = hasDefault ? Integer.parseInt(annotation.defaultValue()) : 0;
-            } else if (lookupType == double.class || lookupType == Double.class) {
-                defaultValue = hasDefault ? Double.parseDouble(annotation.defaultValue()) : 0.;
-            } else if (lookupType == float.class || lookupType == Float.class) {
-                defaultValue = hasDefault ? Float.parseFloat(annotation.defaultValue()) : 0f;
-            } else if (lookupType == short.class || lookupType == Short.class) {
-                defaultValue = hasDefault ? Short.parseShort(annotation.defaultValue()) : (short) 0;
-            } else if (lookupType == char.class || lookupType == Character.class) {
-                defaultValue = hasDefault ? annotation.defaultValue().charAt(0) : (lookupType == char.class ? (char) 0 : null);
-            } else if (collectionCollector != null) {
-                defaultValue = hasDefault ? convert(annotation.defaultValue(), ConfigProvider.getConfig()) : null;
-            } else if (lookupType == String.class) {
-                defaultValue = hasDefault ? annotation.defaultValue() : null;
-            } else if (hasDefault) {
-                throw new IllegalArgumentException("Unsupported default for " + m);
+
+            final String defaultValue = annotation.defaultValue();
+            final boolean hasDefault = !defaultValue.equals(ConfigProperty.UNCONFIGURED_VALUE);
+
+            if (hasDefault) {
+                final Config config = ConfigProvider.getConfig();
+                final String finalDefaultValue = Placeholders.replace(config, defaultValue);
+                if (lookupType == long.class || lookupType == Long.class) {
+                    this.defaultValue = Long.parseLong(finalDefaultValue);
+                } else if (lookupType == int.class || lookupType == Integer.class) {
+                    this.defaultValue = Integer.parseInt(finalDefaultValue);
+                } else if (lookupType == double.class || lookupType == Double.class) {
+                    this.defaultValue = Double.parseDouble(finalDefaultValue);
+                } else if (lookupType == float.class || lookupType == Float.class) {
+                    this.defaultValue = Float.parseFloat(finalDefaultValue);
+                } else if (lookupType == short.class || lookupType == Short.class) {
+                    this.defaultValue = Short.parseShort(finalDefaultValue);
+                } else if (lookupType == char.class || lookupType == Character.class) {
+                    this.defaultValue = finalDefaultValue
+                                                  .charAt(0);
+                } else if (collectionCollector != null) {
+                    this.defaultValue = convert(finalDefaultValue, config);
+                } else if (lookupType == String.class) {
+                    this.defaultValue = finalDefaultValue;
+                } else {
+                    throw new IllegalArgumentException("Unsupported default for " + m);
+                }
             } else {
-                defaultValue = null;
+                this.defaultValue = null;
             }
         }
 

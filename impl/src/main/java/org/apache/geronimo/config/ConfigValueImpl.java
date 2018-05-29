@@ -174,33 +174,7 @@ public class ConfigValueImpl<T> {
 
     private String resolveStringValue() {
         //X TODO implement lookupChain
-
-        String value = config.getValue(keyOriginal);
-        if (evaluateVariables)
-        {
-            // recursively resolve any ${varName} in the value
-            int startVar = 0;
-            while ((startVar = value.indexOf("${", startVar)) >= 0)
-            {
-                int endVar = value.indexOf("}", startVar);
-                if (endVar <= 0)
-                {
-                    break;
-                }
-                String varName = value.substring(startVar + 2, endVar);
-                if (varName.isEmpty())
-                {
-                    break;
-                }
-                String variableValue = config.access(varName).evaluateVariables(true).get();
-                if (variableValue != null)
-                {
-                    value = value.replace("${" + varName + "}", variableValue);
-                }
-                startVar++;
-            }
-        }
-        return value;
+        return Placeholders.replace(config, config.getValue(keyOriginal));
     }
 
     //X @Override
