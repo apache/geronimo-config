@@ -65,6 +65,7 @@ public class ArrayTypeTest extends Arquillian {
         Assert.assertEquals(someBean.getMyconfig(), new int[]{1,2,3});
         Assert.assertEquals(someBean.getIntValues(), asList(1,2,3));
         Assert.assertEquals(someBean.getIntSet(), new LinkedHashSet<>(asList(1,2,3)));
+        Assert.assertEquals(someBean.getIntSetDefault(), new LinkedHashSet<>(asList(1,2,3)));
     }
 
     @Test
@@ -88,12 +89,20 @@ public class ArrayTypeTest extends Arquillian {
         private Set<Integer> intSet;
 
         @Inject
+        @ConfigProperty(name=SOME_KEY, defaultValue = "1,2,3")
+        private Set<Integer> intSetDefault;
+
+        @Inject
         @ConfigProperty(name=SOME_KEY)
         private String stringValue;
 
         @Inject
         @ConfigProperty(name=SOME_OTHER_KEY)
         private List<String> values;
+
+        public Set<Integer> getIntSetDefault() {
+            return intSetDefault;
+        }
 
         public String getStringValue() {
             return stringValue;

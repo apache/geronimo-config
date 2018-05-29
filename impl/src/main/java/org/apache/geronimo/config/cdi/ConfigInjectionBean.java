@@ -138,7 +138,10 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
                     // read the array type, convert it to a Set
                     ConfigImpl config = (ConfigImpl) getConfig();
                     String value = config.getValue(key);
-                    List<Object> elements = config.convertList(value, clazz);
+                    if (value == null && ConfigExtension.isDefaultUnset(defaultValue)) {
+                        return null;
+                    }
+                    List<Object> elements = config.convertList(value == null ? defaultValue : value, clazz);
                     return (T)new LinkedHashSet<>(elements);
                 }
 
@@ -147,7 +150,10 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
                     // read the array type, convert it to a List
                     ConfigImpl config = (ConfigImpl) getConfig();
                     String value = config.getValue(key);
-                    return (T)config.convertList(value, clazz);
+                    if (value == null && ConfigExtension.isDefaultUnset(defaultValue)) {
+                        return null;
+                    }
+                    return (T)config.convertList(value == null ? defaultValue : value, clazz);
                 }
             }
         }
