@@ -46,9 +46,7 @@ import static java.util.Arrays.asList;
 @Typed
 @Vetoed
 public class DefaultConfigBuilder implements ConfigBuilder {
-
-
-    protected ClassLoader forClassLoader;
+    private ClassLoader forClassLoader;
     private final List<ConfigSource> sources = new ArrayList<>();
     private final List<Converter<?>> converters = new ArrayList<>();
     private final Map<Class<?>, PrioritisedConverter> prioritisedConverters = new HashMap<>();
