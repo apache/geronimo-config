@@ -107,6 +107,15 @@ public class DefaultConfigProvider extends ConfigProviderResolver {
                         break;
                     }
                 }
+
+                if (config instanceof AutoCloseable) {
+                    try {
+                        ((AutoCloseable) config).close();
+                    }
+                    catch (Exception e) {
+                        throw new RuntimeException("Error while closing Config", e);
+                    }
+                }
             }
         }
     }

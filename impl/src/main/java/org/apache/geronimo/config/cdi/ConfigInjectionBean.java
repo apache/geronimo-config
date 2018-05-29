@@ -17,6 +17,7 @@
 package org.apache.geronimo.config.cdi;
 
 import org.apache.geronimo.config.ConfigImpl;
+import org.apache.geronimo.config.ConfigValueImpl;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -33,11 +34,13 @@ import javax.enterprise.inject.spi.PassivationCapable;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Provider;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -61,7 +64,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
     /**
      * only access via {@link #getConfig(}
      */
-    private Config _config;
+    private ConfigImpl _config;
 
     public ConfigInjectionBean(BeanManager bm, Type type) {
         this.bm = bm;
@@ -113,48 +116,28 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         if (annotated.getBaseType() instanceof ParameterizedType) {
             ParameterizedType paramType = (ParameterizedType) annotated.getBaseType();
             Type rawType = paramType.getRawType();
-            if(rawType instanceof Class && paramType.getActualTypeArguments().length == 1) {
-                // handle Provider<T>
-                Class<?> rawTypeClass = ((Class<?>) rawType);
-                if (rawTypeClass.isAssignableFrom(Provider.class)) {
-                    Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                    return getConfigValue(key, defaultValue, clazz);
-                }
 
-                // handle Optional<T>
-                if (rawTypeClass.isAssignableFrom(Optional.class)) {
-                    Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                    return (T) getConfig().getOptionalValue(key, clazz);
-                }
+            Class clazzParam = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
 
-                if (rawTypeClass.isAssignableFrom(Supplier.class)) {
-                    Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                    return (T) new ConfigSupplier(clazz, key, defaultValue, (ConfigImpl)getConfig());
-                }
+            // handle Provider<T>
+            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Provider.class) && paramType.getActualTypeArguments().length == 1) {
+                return getConfigValue(key, defaultValue, clazzParam);
+            }
 
-                if (rawTypeClass.isAssignableFrom(Set.class)) {
-                    Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
+            // handle Optional<T>
+            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Optional.class) && paramType.getActualTypeArguments().length == 1) {
+                return (T) getConfig().getOptionalValue(key, clazzParam);
+            }
 
-                    // read the array type, convert it to a Set
-                    ConfigImpl config = (ConfigImpl) getConfig();
-                    String value = config.getValue(key);
-                    if (value == null && ConfigExtension.isDefaultUnset(defaultValue)) {
-                        return null;
-                    }
-                    List<Object> elements = config.convertList(value == null ? defaultValue : value, clazz);
-                    return (T)new LinkedHashSet<>(elements);
-                }
+            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Supplier.class) && paramType.getActualTypeArguments().length == 1) {
+                return (T) new ConfigSupplier(clazzParam, key, defaultValue, (ConfigImpl)getConfig());
+            }
 
-                if (rawTypeClass.isAssignableFrom(List.class)) {
-                    Class clazz = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
-                    // read the array type, convert it to a List
-                    ConfigImpl config = (ConfigImpl) getConfig();
-                    String value = config.getValue(key);
-                    if (value == null && ConfigExtension.isDefaultUnset(defaultValue)) {
-                        return null;
-                    }
-                    return (T)config.convertList(value == null ? defaultValue : value, clazz);
-                }
+            if (Set.class.equals(rawType)) {
+                return (T) new HashSet(getList(key, clazzParam, defaultValue));
+            }
+            if (List.class.equals(rawType)) {
+                return (T) getList(key, clazzParam, defaultValue);
             }
         }
         else {
@@ -163,6 +146,21 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         }
 
         throw new IllegalStateException("unhandled ConfigProperty");
+    }
+
+    private List getList(String key, Class clazzParam, String defaultValue) {
+        ConfigValueImpl configValue = getConfig()
+                .access(key)
+                .as(clazzParam)
+                .asList()
+                .evaluateVariables(true);
+
+        if (!ConfigExtension.isDefaultUnset(defaultValue))
+        {
+            configValue.withStringDefault(defaultValue);
+        }
+
+        return (List) configValue.get();
     }
 
     private T getConfigValue(String key, String defaultValue, Class clazz) {
@@ -196,9 +194,9 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         throw new IllegalStateException("Could not find default name for @ConfigProperty InjectionPoint " + ip);
     }
 
-    public Config getConfig() {
+    public ConfigImpl getConfig() {
         if (_config == null) {
-            _config = ConfigProvider.getConfig();
+            _config = (ConfigImpl) ConfigProvider.getConfig();
         }
         return _config;
     }

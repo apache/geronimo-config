@@ -24,4 +24,22 @@ import javax.enterprise.util.AnnotationLiteral;
 
 class DefaultLiteral extends AnnotationLiteral<Default> implements Default {
     public static Default INSTANCE = new DefaultLiteral();
+
+    @Override
+    public boolean equals(Object other)
+    {
+        return other instanceof Default;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return 0;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "@Default";
+    }
 }

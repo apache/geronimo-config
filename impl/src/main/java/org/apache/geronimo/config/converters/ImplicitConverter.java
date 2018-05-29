@@ -17,11 +17,16 @@
 package org.apache.geronimo.config.converters;
 
 
+import org.eclipse.microprofile.config.spi.Converter;
+
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.eclipse.microprofile.config.spi.Converter;
+
 
 /**
  * A Converter factory + impl for 'common sense converters'
@@ -29,10 +34,9 @@ import org.eclipse.microprofile.config.spi.Converter;
  */
 public abstract class ImplicitConverter {
 
-    public static <T> MicroProfileTypedConverter<T> getImplicitConverter(Class<T> clazz) {
-
+    public static Converter getImplicitConverter(Class<?> clazz) {
         // handle ct with String param
-        Converter<T> converter = hasConverterCt(clazz, String.class);
+        Converter converter = hasConverterCt(clazz, String.class);
         if (converter == null) {
             converter = hasConverterCt(clazz, CharSequence.class);
         }
@@ -48,23 +52,24 @@ public abstract class ImplicitConverter {
         if (converter == null) {
             converter = hasConverterMethod(clazz, "parse", CharSequence.class);
         }
-        if (converter == null) {
-            return null;
-        }
-        return new MicroProfileTypedConverter<T>(converter, 100);
+
+        return converter;
     }
 
-    private static <T> Converter<T> hasConverterCt(Class<T> clazz, Class<?> paramType) {
+    private static Converter hasConverterCt(Class<?> clazz, Class<?> paramType) {
         try {
             final Constructor<?> declaredConstructor = clazz.getDeclaredConstructor(paramType);
             if (!declaredConstructor.isAccessible()) {
                 declaredConstructor.setAccessible(true);
             }
-            return value -> {
-                try {
-                    return (T)declaredConstructor.newInstance(value);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+            return new Converter() {
+                @Override
+                public Object convert(String value) {
+                    try {
+                        return declaredConstructor.newInstance(value);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             };
         } catch (NoSuchMethodException e) {
@@ -73,19 +78,23 @@ public abstract class ImplicitConverter {
         return null;
     }
 
-    private static <T> Converter<T> hasConverterMethod(Class<T> clazz, String methodName, Class<?> paramType) {
+    private static Converter hasConverterMethod(Class<?> clazz, String methodName, Class<?> paramType) {
         // handle valueOf with CharSequence param
         try {
-            final Method method = clazz.getMethod(methodName, paramType);
+            final Method method = clazz.getDeclaredMethod(methodName, paramType);
             if (!method.isAccessible()) {
                 method.setAccessible(true);
             }
-            if (Modifier.isStatic(method.getModifiers())) {
-                return value -> {
-                    try {
-                        return (T)method.invoke(null, value);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+            if (Modifier.isStatic(method.getModifiers()) && method.getReturnType().equals(clazz)) {
+                return new Converter() {
+                    @Override
+                    public Object convert(String value) {
+                        try {
+                            return method.invoke(null, value);
+                        } catch (Exception e) {
+                            throw new IllegalArgumentException("Error while converting the value " + value +
+                                    " to type " + method.getReturnType());
+                        }
                     }
                 };
             }
@@ -93,5 +102,68 @@ public abstract class ImplicitConverter {
             // all fine
         }
         return null;
+    }
+
+    public static class ImplicitArrayConverter<T> implements Converter<T> {
+        private final Converter converter;
+        private final Class<?> type;
+
+        public ImplicitArrayConverter(Converter converter, Class<?> type) {
+            this.converter = converter;
+            this.type = type;
+        }
+
+        @Override
+        public T convert(String valueStr) {
+            if (valueStr == null)
+            {
+                return null;
+            }
+
+            List list = new ArrayList();
+            StringBuilder currentValue = new StringBuilder();
+            int length = valueStr.length();
+            for (int i = 0; i < length; i++)
+            {
+                char c = valueStr.charAt(i);
+                if (c == '\\')
+                {
+                    if (i < length - 1)
+                    {
+                        char nextC = valueStr.charAt(i + 1);
+                        currentValue.append(nextC);
+                        i++;
+                    }
+                }
+                else if (c == ',')
+                {
+                    String trimedVal = currentValue.toString().trim();
+                    if (trimedVal.length() > 0)
+                    {
+                        list.add(converter.convert(trimedVal));
+                    }
+
+                    currentValue.setLength(0);
+                }
+                else
+                {
+                    currentValue.append(c);
+                }
+            }
+
+            String trimedVal = currentValue.toString().trim();
+            if (trimedVal.length() > 0)
+            {
+                list.add(converter.convert(trimedVal));
+            }
+
+            // everything else is an Object array
+            Object array = Array.newInstance(type, list.size());
+            for (int i=0; i < list.size(); i++) {
+                Array.set(array, i, list.get(i));
+            }
+            return (T) array;
+        }
+
     }
 }

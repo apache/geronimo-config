@@ -16,15 +16,19 @@
  */
 package org.apache.geronimo.config;
 
-import org.apache.geronimo.config.converters.MicroProfileTypedConverter;
+import org.eclipse.microprofile.config.spi.Converter;
 
-import javax.enterprise.inject.Typed;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import javax.enterprise.inject.Typed;
 
 /**
  * @author <a href="mailto:struberg@apache.org">Mark Struberg</a>
@@ -45,10 +49,22 @@ public class ConfigValueImpl<T> {
 
     private boolean evaluateVariables = false;
 
-    private long cacheTimeMs = -1;
+    private long cacheTimeNs = -1;
     private volatile long reloadAfter = -1;
+    private long lastReloadedAt = -1;
+
     private T lastValue = null;
-    private ConfigChanged valueChangeListener;
+    //X will later get added again private ConfigChanged valueChangeListener;
+    private boolean isList;
+    private boolean isSet;
+
+    private T defaultValue;
+    private boolean withDefault;
+
+    /**
+     * Alternative Converter to be used instead of the default converter
+     */
+    private Converter<T> converter;
 
     public ConfigValueImpl(ConfigImpl config, String key) {
         this.config = config;
@@ -61,10 +77,73 @@ public class ConfigValueImpl<T> {
         return (ConfigValueImpl<N>) this;
     }
 
+    //X @Override
+    public ConfigValueImpl<List<T>> asList() {
+        isList = true;
+        ConfigValueImpl<List<T>> listTypedResolver = (ConfigValueImpl<List<T>>) this;
+
+        if (defaultValue == null)
+        {
+            // the default for lists is an empty list instead of null
+            return listTypedResolver.withDefault(Collections.<T>emptyList());
+        }
+
+        return listTypedResolver;
+    }
+
+    //X @Override
+    public ConfigValueImpl<Set<T>> asSet() {
+        isSet = true;
+        ConfigValueImpl<Set<T>> listTypedResolver = (ConfigValueImpl<Set<T>>) this;
+
+        if (defaultValue == null)
+        {
+            // the default for lists is an empty list instead of null
+            return listTypedResolver.withDefault(Collections.<T>emptySet());
+        }
+
+        return listTypedResolver;
+    }
+
+    //X @Override
+    public ConfigValueImpl<T> withDefault(T value) {
+        defaultValue = value;
+        withDefault = true;
+        return this;
+    }
+
+    //X @Override
+    public ConfigValueImpl<T> withStringDefault(String value) {
+        if (value == null || value.isEmpty()) {
+            throw new RuntimeException("Empty String or null supplied as string-default value for property "
+                    + keyOriginal);
+        }
+        value = replaceVariables(value);
+
+        if (isList) {
+            defaultValue = splitAndConvertListValue(value);
+        }
+        else {
+            defaultValue = convert(value);
+        }
+        withDefault = true;
+        return this;
+    }
+
+    //X @Override
+    public T getDefaultValue() {
+        return defaultValue;
+    }
+
+    //X @Override
+    public ConfigValueImpl<T> useConverter(Converter<T> converter) {
+        this.converter = converter;
+        return this;
+    }
 
     //X @Override
     public ConfigValueImpl<T> cacheFor(long value, TimeUnit timeUnit) {
-        this.cacheTimeMs = timeUnit.toMillis(value);
+        this.cacheTimeNs = timeUnit.toNanos(value);
         return this;
     }
 
@@ -80,28 +159,21 @@ public class ConfigValueImpl<T> {
     }
 
     //X @Override
-    public T get() {
-        T val = getValue();
-        if (val == null) {
-            throw new NoSuchElementException("No config value present for key " + keyOriginal);
-        }
-        return val;
+    public Optional<T> getOptionalValue() {
+        return Optional.ofNullable(get());
     }
 
-    //X @Override
-    public Optional<T> getOptional() {
-        return Optional.ofNullable(getValue());
-    }
-
-    //X @Override
+    //X will later get added again @Override
+    /*X
     public ConfigValueImpl<T> onChange(ConfigChanged valueChangeListener) {
         this.valueChangeListener = valueChangeListener;
         return this;
     }
+    */
 
     //X @Override
     public List<T> getValueList() {
-        String rawList = (String) getValue(false);
+        String rawList = (String) get(false);
         List<T> values = new ArrayList<T>();
         StringBuilder sb = new StringBuilder(64);
         for (int i= 0; i < rawList.length(); i++) {
@@ -139,73 +211,223 @@ public class ConfigValueImpl<T> {
         sb.setLength(0);
     }
 
-    public T getValue() {
-        return getValue(true);
+    public T get() {
+        return get(true);
     }
 
-    private T getValue(boolean convert) {
-        long now = -1;
-        if (cacheTimeMs > 0)
+    //X @Override
+    public T getValue() {
+        T val = get();
+        if (val == null) {
+            throw new NoSuchElementException("No config value present for key " + keyOriginal);
+        }
+        return val;
+    }
+
+    //X @Override
+    /*X will come with the next version
+    public T getValue(ConfigSnapshot configSnapshot) {
+        ConfigSnapshotImpl snapshotImpl = (ConfigSnapshotImpl) configSnapshot;
+
+        if (!snapshotImpl.getConfigValues().containsKey(this))
         {
-            now = System.currentTimeMillis();
+            throw new IllegalArgumentException("The TypedResolver for key " + getPropertyName() +
+                    " does not belong the given ConfigSnapshot!");
+        }
+
+        return (T) snapshotImpl.getConfigValues().get(this);
+    }
+    */
+
+
+    private T get(boolean convert) {
+        long now = -1;
+        if (cacheTimeNs > 0)
+        {
+            now = System.nanoTime();
             if (now <= reloadAfter)
             {
-                return lastValue;
+                // now check if anything in the underlying Config got changed
+                long lastCfgChange = config.getLastChanged();
+                if (lastCfgChange < lastReloadedAt)
+                {
+                    return lastValue;
+                }
             }
         }
 
         String valueStr = resolveStringValue();
-        T value = convert ? convert(valueStr) : (T) valueStr;
 
+        if ((valueStr == null || valueStr.isEmpty()) && withDefault) {
+            return defaultValue;
+        }
+
+        T value;
+        if (isList || isSet) {
+            value = splitAndConvertListValue(valueStr);
+            if (isSet) {
+                value = (T) new HashSet((List) value);
+            }
+        }
+        else {
+            value = convert ? convert(valueStr) : (T) valueStr;
+        }
+
+        //X will later get added again
+        /*X
         if (valueChangeListener != null && (value != null && !value.equals(lastValue) || (value == null && lastValue != null)) )
         {
             valueChangeListener.onValueChange(keyOriginal, lastValue, value);
         }
+        */
 
         lastValue = value;
 
-        if (cacheTimeMs > 0)
+        if (cacheTimeNs > 0)
         {
-            reloadAfter = now + cacheTimeMs;
+            reloadAfter = now + cacheTimeNs;
+            lastReloadedAt = now;
         }
 
         return value;
     }
 
     private String resolveStringValue() {
-        //X TODO implement lookupChain
-        return Placeholders.replace(config, config.getValue(keyOriginal));
+        String value = null;
+
+        if (lookupChain != null) {
+            // first we resolve the value
+            List<String> postfixVals = new ArrayList<>();
+            for (String postfix : lookupChain) {
+                if (postfix.startsWith("${") && postfix.length() > 3) {
+                    String varName = postfix.substring(2, postfix.length()-1);
+                    String varValue = config.getValue(varName);
+                    if (varValue != null && varValue.length() > 0) {
+                        postfixVals.add(varValue);
+                    }
+                }
+                else {
+                    postfixVals.add(postfix);
+                }
+            }
+
+            // binary count down
+            for (int mask = (1 << postfixVals.size()) - 1; mask > 0; mask--) {
+                StringBuilder sb = new StringBuilder(keyOriginal);
+                for (int loc = 0; loc < postfixVals.size(); loc++) {
+                    int bitPos = 1 << (postfixVals.size() - loc - 1);
+                    if ((mask & bitPos) > 0) {
+                        sb.append('.').append(postfixVals.get(loc));
+                    }
+                }
+
+                value = config.getValue(sb.toString());
+                if (value != null && value.length() > 0) {
+                    keyResolved = sb.toString();
+                    break;
+                }
+            }
+
+        }
+
+        if (value == null) {
+            value = config.getValue(keyOriginal);
+            this.keyResolved = keyOriginal;
+        }
+
+        if (evaluateVariables && value != null)
+        {
+            value = replaceVariables(value);
+
+        }
+        return value;
+    }
+
+    private String replaceVariables(String value)
+    {
+        // recursively resolve any ${varName} in the value
+        int startVar = 0;
+        while ((startVar = value.indexOf("${", startVar)) >= 0)
+        {
+            int endVar = value.indexOf("}", startVar);
+            if (endVar <= 0)
+            {
+                break;
+            }
+            String varName = value.substring(startVar + 2, endVar);
+            if (varName.isEmpty())
+            {
+                break;
+            }
+            String variableValue = config.access(varName).evaluateVariables(true).get();
+            if (variableValue != null)
+            {
+                value = value.replace("${" + varName + "}", variableValue);
+            }
+            startVar++;
+        }
+        return value;
     }
 
     //X @Override
-    public String getKey() {
+    public String getPropertyName() {
         return keyOriginal;
     }
 
     //X @Override
-    public String getResolvedKey() {
+    public String getResolvedPropertyName() {
         return keyResolved;
     }
 
     private T convert(String value) {
+        if (converter != null) {
+            return converter.convert(value);
+        }
+
         if (String.class == configEntryType) {
             return (T) value;
         }
 
-        MicroProfileTypedConverter converter = config.getConverters().get(configEntryType);
-        if (converter == null) {
-            throw new IllegalStateException("No Converter for type " + configEntryType);
-        }
-
-        return (T) converter.convert(value);
+        return (T) config.convert(value, configEntryType);
     }
 
-    /**
-     * TODO feedback from gunnar: could be interesting to have this functionality also as Config#onChange(ConfigChanged)
-     * Callback which can be used with {@link #onChange(ConfigChanged)}
-     */
-    interface ConfigChanged {
-        <T> void onValueChange(String key, T oldValue, T newValue);
+
+    private T splitAndConvertListValue(String valueStr) {
+        if (valueStr == null) {
+            return null;
+        }
+
+        List list = new ArrayList();
+        StringBuilder currentValue = new StringBuilder();
+        int length = valueStr.length();
+        for (int i = 0; i < length; i++) {
+            char c = valueStr.charAt(i);
+            if (c == '\\') {
+                if (i < length - 1) {
+                    char nextC = valueStr.charAt(i + 1);
+                    currentValue.append(nextC);
+                    i++;
+                }
+            }
+            else if (c == ',') {
+                String trimedVal = currentValue.toString().trim();
+                if (trimedVal.length() > 0) {
+                    list.add(convert(trimedVal));
+                }
+
+                currentValue.setLength(0);
+            }
+            else {
+                currentValue.append(c);
+            }
+        }
+
+        String trimedVal = currentValue.toString().trim();
+        if (trimedVal.length() > 0) {
+            list.add(convert(trimedVal));
+        }
+
+        return (T) list;
     }
 
 }

@@ -24,4 +24,22 @@ import javax.enterprise.util.AnnotationLiteral;
 
 class AnyLiteral extends AnnotationLiteral<Any> implements Any {
     public static Any INSTANCE = new AnyLiteral();
+
+    @Override
+    public boolean equals(Object other)
+    {
+        return other instanceof Any;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return 0;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "@Any";
+    }
 }

@@ -35,7 +35,6 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import org.apache.geronimo.config.ConfigImpl;
-import org.apache.geronimo.config.Placeholders;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -125,7 +124,7 @@ public class ConfigurationHandler implements InvocationHandler {
 
             if (hasDefault) {
                 final Config config = ConfigProvider.getConfig();
-                final String finalDefaultValue = Placeholders.replace(config, defaultValue);
+                final String finalDefaultValue = defaultValue;
                 if (lookupType == long.class || lookupType == Long.class) {
                     this.defaultValue = Long.parseLong(finalDefaultValue);
                 } else if (lookupType == int.class || lookupType == Integer.class) {
