@@ -32,6 +32,7 @@ import javax.enterprise.inject.spi.DeploymentException;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import javax.enterprise.inject.spi.ProcessBean;
 import javax.enterprise.inject.spi.ProcessInjectionPoint;
 import javax.inject.Provider;
 
@@ -71,6 +72,7 @@ public class ConfigExtension implements Extension {
     private Set<Class<?>> proxies = new HashSet<>();
     private List<Class<?>> validProxies;
     private List<ProxyBean<?>> proxyBeans;
+    private boolean foundConfig;
 
 
     public void findProxies(@Observes ProcessAnnotatedType<?> pat) {
@@ -87,6 +89,10 @@ public class ConfigExtension implements Extension {
         if (configProperty != null) {
             injectionPoints.add(pip.getInjectionPoint());
         }
+    }
+
+    void onConfig(@Observes final ProcessAnnotatedType<Config> configProcessBean) {
+        foundConfig = true;
     }
 
     public void registerConfigProducer(@Observes AfterBeanDiscovery abd, BeanManager bm) {
@@ -115,6 +121,10 @@ public class ConfigExtension implements Extension {
                                      .collect(toList());
             proxyBeans.forEach(abd::addBean);
         } // else there are errors
+
+        if (!foundConfig) {
+            abd.addBean(new ConfigInjectionBean<>(bm, Config.class));
+        }
     }
 
     public void validate(@Observes AfterDeploymentValidation add) {
