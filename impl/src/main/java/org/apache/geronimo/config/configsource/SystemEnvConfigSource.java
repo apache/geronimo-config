@@ -19,6 +19,7 @@
 package org.apache.geronimo.config.configsource;
 
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.enterprise.inject.Typed;
@@ -38,10 +39,20 @@ import javax.config.spi.ConfigSource;
 @Vetoed
 public class SystemEnvConfigSource extends BaseConfigSource {
     private Map<String, String> configValues;
+    private Map<String, String> uppercasePosixValues;
 
     public SystemEnvConfigSource() {
+        uppercasePosixValues = new HashMap<>();
         configValues = System.getenv();
         initOrdinal(300);
+
+        for (Map.Entry<String, String> e : configValues.entrySet()) {
+            String originalKey = e.getKey();
+            String posixKey = replaceNonPosixEnvChars(originalKey).toUpperCase();
+            if (!originalKey.equals(posixKey)) {
+                uppercasePosixValues.put(posixKey, e.getValue());
+            }
+        }
     }
 
     @Override
@@ -58,13 +69,20 @@ public class SystemEnvConfigSource extends BaseConfigSource {
     public String getValue(String key) {
         String val = configValues.get(key);
         if (val == null) {
-            key = key.replace('.', '_');
+            key = replaceNonPosixEnvChars(key);
             val = configValues.get(key);
         }
         if (val == null) {
-           key = key.toUpperCase();
-           val = configValues.get(key);
+            key = key.toUpperCase();
+            val = configValues.get(key);
+        }
+        if (val == null) {
+            val = uppercasePosixValues.get(key);
         }
         return val;
+    }
+
+    private String replaceNonPosixEnvChars(String key) {
+        return key.replaceAll("[^A-Za-z0-9]", "_");
     }
 }
