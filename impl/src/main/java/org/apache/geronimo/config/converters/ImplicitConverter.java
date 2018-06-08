@@ -35,15 +35,24 @@ public abstract class ImplicitConverter {
 
     public static Converter getImplicitConverter(Class<?> clazz) {
         // handle ct with String param
-        Converter converter = hasConverterCt(clazz, String.class);
+        Converter converter = null;
         if (converter == null) {
-            converter = hasConverterCt(clazz, CharSequence.class);
+            converter = hasConverterMethod(clazz, "of", String.class);
+        }
+        if (converter == null) {
+            converter = hasConverterMethod(clazz, "of", CharSequence.class);
         }
         if (converter == null) {
             converter = hasConverterMethod(clazz, "valueOf", String.class);
         }
         if (converter == null) {
             converter = hasConverterMethod(clazz, "valueOf", CharSequence.class);
+        }
+        if (converter == null) {
+            converter = hasConverterCt(clazz, String.class);
+        }
+        if (converter == null) {
+            converter = hasConverterCt(clazz, CharSequence.class);
         }
         if (converter == null) {
             converter = hasConverterMethod(clazz, "parse", String.class);
@@ -66,7 +75,7 @@ public abstract class ImplicitConverter {
                     try {
                         return declaredConstructor.newInstance(value);
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new IllegalArgumentException(e);
                     }
                 }
             };
