@@ -103,6 +103,13 @@
                         <MY_BOOLEAN_PROPERTY>true</MY_BOOLEAN_PROPERTY>
                         <my_string_property>haha</my_string_property>
                         <MY_STRING_PROPERTY>woohoo</MY_STRING_PROPERTY>
+
+                        <!-- and for our internal SystemEnvConfigSourceTest -->
+                        <A_b_c>1</A_b_c>
+                        <A_B_C>2</A_B_C>
+                        <A_B_D>3</A_B_D>
+                        <A_B_e>4</A_B_e>
+
                     </environmentVariables>
                     <systemPropertyVariables>
                         <!-- TCKs assume it but this is not really a good option for prod -->
