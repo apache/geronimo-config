@@ -31,8 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
@@ -159,7 +157,7 @@ public class DefaultConfigBuilder implements ConfigBuilder {
 
         configSources.add(new SystemEnvConfigSource());
         configSources.add(new SystemPropertyConfigSource());
-        configSources.addAll(new PropertyFileConfigSourceProvider("/META-INF/javaconfig.properties", true, forClassLoader).getConfigSources(forClassLoader));
+        configSources.addAll(new PropertyFileConfigSourceProvider("META-INF/javaconfig.properties", true, forClassLoader).getConfigSources(forClassLoader));
 
         return configSources;
     }

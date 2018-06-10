@@ -21,8 +21,11 @@ package org.apache.geronimo.config.configsource;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,14 +51,12 @@ public class PropertyFileConfigSourceProvider implements ConfigSourceProvider {
 
     public PropertyFileConfigSourceProvider(String propertyFileName, boolean optional, ClassLoader forClassLoader) {
         try {
-            Enumeration<URL> propertyFileUrls = resolvePropertyFiles(forClassLoader, propertyFileName);
-
-            if (!optional && !propertyFileUrls.hasMoreElements()) {
+            Collection<URL> propertyFileUrls = resolvePropertyFiles(forClassLoader, propertyFileName);
+            if (!optional && propertyFileUrls.isEmpty()) {
                 throw new IllegalStateException(propertyFileName + " wasn't found.");
             }
 
-            while (propertyFileUrls.hasMoreElements()) {
-                URL propertyFileUrl = propertyFileUrls.nextElement();
+            for (URL propertyFileUrl : propertyFileUrls) {
                 LOG.log(Level.INFO,
                         "Custom config found by GeronimoConfig. Name: ''{0}'', URL: ''{1}''",
                         new Object[]{propertyFileName, propertyFileUrl});
@@ -68,9 +69,23 @@ public class PropertyFileConfigSourceProvider implements ConfigSourceProvider {
 
     }
 
-    public Enumeration<URL> resolvePropertyFiles(ClassLoader cl, String propertyFileName) throws IOException {
-        Enumeration<URL> propertyFileUrls = cl.getResources(propertyFileName);
+    public Collection<URL> resolvePropertyFiles(ClassLoader forClassLoader, String propertyFileName) throws IOException {
+        // de-duplicate
+        Map<String, URL> propertyFileUrls = resolveUrls(propertyFileName, forClassLoader);
 
+        // and once again with preceding a "/"
+        propertyFileUrls.putAll(resolveUrls("/" + propertyFileName, forClassLoader));
+
+        return propertyFileUrls.values();
+    }
+
+    private Map<String, URL> resolveUrls(String propertyFileName, ClassLoader forClassLoader) throws IOException {
+        Map<String, URL> propertyFileUrls = new HashMap<>();
+        Enumeration<URL> urls = forClassLoader.getResources(propertyFileName);
+        while (urls.hasMoreElements()) {
+            URL url = urls.nextElement();
+            propertyFileUrls.put(url.toExternalForm(), url);
+        }
         return propertyFileUrls;
     }
 
