@@ -63,27 +63,12 @@ public class PropertyFileConfigSource extends BaseConfigSource {
     private Map<String, String> loadProperties(URL url) {
         Properties props = new Properties();
 
-        InputStream inputStream = null;
-        try {
-            inputStream = url.openStream();
+        try (InputStream inputStream = url.openStream()) {
 
-            if (inputStream != null) {
-                props.load(inputStream);
-            }
-        }
-        catch (IOException e) {
+            props.load(inputStream);
+        } catch (IOException e) {
             // don't return null on IOException
-            LOG.log(Level.WARNING, "Unable to read URL "+url, e);
-        }
-        finally {
-            try {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-            }
-            catch (IOException e) {
-                // no worries, means that the file is already closed
-            }
+            LOG.log(Level.WARNING, "Unable to read URL " + url, e);
         }
 
         return (Map) props;
