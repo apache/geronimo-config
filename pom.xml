@@ -41,9 +41,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/geronimo/components/config/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/geronimo/components/config/trunk</developerConnection>
-        <url>https://svn.apache.org/repos/asf/geronimo/components/config/trunk</url>
+        <connection>scm:git:https://gitbox.apache.org/repos/asf/geronimo-config.git</connection>
+        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/geronimo-config.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf/geronimo-config.git</url>
     </scm>
 
 
@@ -55,8 +55,8 @@
         <arquillian-weld-embedded.version>2.0.0.Final</arquillian-weld-embedded.version>
 
         <!-- OWB -->
-        <owb.version>1.7.4</owb.version>
-        <owb2.version>2.0.4</owb2.version>
+        <owb.version>1.7.5</owb.version>
+        <owb2.version>2.0.6</owb2.version>
 
         <!-- Weld -->
         <cdi2-api.version>2.0</cdi2-api.version>
@@ -70,6 +70,18 @@
 
     <build>
         <plugins>
+            <!-- we need to tweak the maven-release-plugin for GIT -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <pushChanges>false</pushChanges>
+                    <localCheckout>true</localCheckout>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <preparationGoals>clean install</preparationGoals>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
