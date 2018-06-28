@@ -37,12 +37,12 @@ import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -248,6 +248,21 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         @Override
         public String defaultValue() {
             return "";
+        }
+
+        @Override
+        public boolean evaluateVariables() {
+            return true;
+        }
+
+        @Override
+        public TimeUnit cacheTimeUnit() {
+            return TimeUnit.SECONDS;
+        }
+
+        @Override
+        public long cacheFor() {
+            return 0;
         }
     }
 }

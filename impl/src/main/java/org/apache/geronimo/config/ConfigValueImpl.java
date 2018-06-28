@@ -47,7 +47,7 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
 
     private Class<?> configEntryType = String.class;
 
-    private String[] lookupChain;
+    private List<Object> lookupChain;
 
     private boolean evaluateVariables = false;
 
@@ -155,8 +155,19 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
         return this;
     }
 
-    public ConfigValueImpl<T> withLookupChain(String... postfixNames) {
-        this.lookupChain = postfixNames;
+    public ConfigValueImpl<T> addLookupSuffix(String suffixValue) {
+        if (lookupChain == null) {
+            lookupChain = new ArrayList<>();
+        }
+        this.lookupChain.add(suffixValue);
+        return this;
+    }
+
+    public ConfigValueImpl<T> addLookupSuffix(ConfigAccessor<String> suffixAccessor) {
+        if (lookupChain == null) {
+            lookupChain = new ArrayList<>();
+        }
+        this.lookupChain.add(suffixAccessor);
         return this;
     }
 
@@ -298,27 +309,23 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
 
         if (lookupChain != null) {
             // first we resolve the value
-            List<String> postfixVals = new ArrayList<>();
-            for (String postfix : lookupChain) {
-                if (postfix.startsWith("${") && postfix.length() > 3) {
-                    String varName = postfix.substring(2, postfix.length()-1);
-                    String varValue = config.getValue(varName);
-                    if (varValue != null && varValue.length() > 0) {
-                        postfixVals.add(varValue);
-                    }
+            List<String> suffixVals = new ArrayList<>();
+            for (Object suffix : lookupChain) {
+                if (suffix instanceof ConfigAccessor) {
+                    suffixVals.add(((ConfigAccessor<String>) suffix).getValue());
                 }
                 else {
-                    postfixVals.add(postfix);
+                    suffixVals.add((String) suffix);
                 }
             }
 
             // binary count down
-            for (int mask = (1 << postfixVals.size()) - 1; mask > 0; mask--) {
+            for (int mask = (1 << suffixVals.size()) - 1; mask > 0; mask--) {
                 StringBuilder sb = new StringBuilder(keyOriginal);
-                for (int loc = 0; loc < postfixVals.size(); loc++) {
-                    int bitPos = 1 << (postfixVals.size() - loc - 1);
+                for (int loc = 0; loc < suffixVals.size(); loc++) {
+                    int bitPos = 1 << (suffixVals.size() - loc - 1);
                     if ((mask & bitPos) > 0) {
-                        sb.append('.').append(postfixVals.get(loc));
+                        sb.append('.').append(suffixVals.get(loc));
                     }
                 }
 
