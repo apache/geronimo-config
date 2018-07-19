@@ -23,7 +23,7 @@
 
     <classes>
         <!-- Issues in the spec -->
-        <class name="org.eclipse.configjsr.ConfigValueTest">
+        <class name="org.eclipse.configjsr.CDIPlainInjectionTest">
             <methods>
                 <include name=".*"/>
             </methods>

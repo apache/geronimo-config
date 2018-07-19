@@ -111,8 +111,8 @@ public class ConfigExtension implements Extension {
         }
 
         if (!deploymentProblems.isEmpty()) {
-            add.addDeploymentProblem(new DeploymentException("Error while validating Configuration\n"
-                                                             + String.join("\n", deploymentProblems)));
+            add.addDeploymentProblem(new DeploymentException("Error while validating Configuration\n  "
+                                                             + String.join("\n  ", deploymentProblems)));
         }
 
     }

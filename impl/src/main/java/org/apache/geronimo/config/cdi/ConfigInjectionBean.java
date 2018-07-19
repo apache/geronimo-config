@@ -111,6 +111,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         ConfigProperty configProperty = annotated.getAnnotation(ConfigProperty.class);
         String key = getConfigKey(ip, configProperty);
         String defaultValue = configProperty.defaultValue();
+        boolean evaluateVariables = configProperty.evaluateVariables();
 
         if (annotated.getBaseType() instanceof ParameterizedType) {
             ParameterizedType paramType = (ParameterizedType) annotated.getBaseType();
@@ -120,7 +121,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
 
             // handle Provider<T>
             if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Provider.class) && paramType.getActualTypeArguments().length == 1) {
-                return getConfigValue(key, defaultValue, clazzParam);
+                return getConfigValue(key, defaultValue, evaluateVariables, clazzParam);
             }
 
             // handle Optional<T>
@@ -141,7 +142,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         }
         else {
             Class clazz = (Class) annotated.getBaseType();
-            return getConfigValue(key, defaultValue, clazz);
+            return getConfigValue(key, defaultValue, evaluateVariables, clazz);
         }
 
         throw new IllegalStateException("unhandled ConfigProperty");
@@ -161,13 +162,13 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         return list;
     }
 
-    private T getConfigValue(String key, String defaultValue, Class clazz) {
+    private T getConfigValue(String key, String defaultValue, boolean evaluateVariables, Class clazz) {
         if (ConfigExtension.isDefaultUnset(defaultValue)) {
-            return (T) getConfig().getValue(key, clazz);
+            return (T) getConfig().access(key).as(clazz).evaluateVariables(evaluateVariables).getValue();
         }
         else {
             Config config = getConfig();
-            return (T) config.getOptionalValue(key, clazz)
+            return (T) getConfig().access(key).as(clazz).evaluateVariables(evaluateVariables).getOptionalValue()
                     .orElse(((ConfigImpl) config).convert(defaultValue, clazz));
         }
     }
