@@ -49,7 +49,7 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
 
     private List<Object> lookupChain;
 
-    private boolean evaluateVariables = false;
+    private boolean evaluateVariables = true;
 
     private long cacheTimeNs = -1;
     private volatile long reloadAfter = -1;
