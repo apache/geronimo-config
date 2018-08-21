@@ -18,10 +18,11 @@ package org.apache.geronimo.config.cdi;
 
 import static java.util.stream.Collectors.toList;
 
-import org.apache.geronimo.config.DefaultConfigProvider;
+import org.apache.geronimo.config.cdi.configsource.Reloadable;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.config.spi.ConfigProviderResolver;
 
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
@@ -32,15 +33,12 @@ import javax.enterprise.inject.spi.DeploymentException;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import javax.enterprise.inject.spi.ProcessBean;
 import javax.enterprise.inject.spi.ProcessInjectionPoint;
 import javax.inject.Provider;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,6 +48,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>
@@ -72,7 +71,6 @@ public class ConfigExtension implements Extension {
     private Set<Class<?>> proxies = new HashSet<>();
     private List<Class<?>> validProxies;
     private List<ProxyBean<?>> proxyBeans;
-    private boolean foundConfig;
 
 
     public void findProxies(@Observes ProcessAnnotatedType<?> pat) {
@@ -89,10 +87,6 @@ public class ConfigExtension implements Extension {
         if (configProperty != null) {
             injectionPoints.add(pip.getInjectionPoint());
         }
-    }
-
-    void onConfig(@Observes final ProcessAnnotatedType<Config> configProcessBean) {
-        foundConfig = true;
     }
 
     public void registerConfigProducer(@Observes AfterBeanDiscovery abd, BeanManager bm) {
@@ -121,16 +115,18 @@ public class ConfigExtension implements Extension {
                                      .collect(toList());
             proxyBeans.forEach(abd::addBean);
         } // else there are errors
-
-        if (!foundConfig) {
-            abd.addBean(new ConfigInjectionBean<>(bm, Config.class));
-        }
     }
 
     public void validate(@Observes AfterDeploymentValidation add) {
         List<String> deploymentProblems = new ArrayList<>();
 
         config = ConfigProvider.getConfig();
+
+        StreamSupport.stream(config.getConfigSources().spliterator(), false)
+                     .filter(Reloadable.class::isInstance)
+                     .map(Reloadable.class::cast)
+                     .forEach(Reloadable::reload);
+
         proxyBeans.forEach(b -> b.init(config));
         proxyBeans.clear();
 
@@ -167,7 +163,7 @@ public class ConfigExtension implements Extension {
     }
 
     public void shutdown(@Observes BeforeShutdown bsd) {
-        DefaultConfigProvider.instance().releaseConfig(config);
+        ConfigProviderResolver.instance().releaseConfig(config);
     }
 
     private boolean isValidProxy(final Class<?> api) {

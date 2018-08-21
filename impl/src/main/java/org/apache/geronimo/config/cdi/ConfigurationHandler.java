@@ -127,6 +127,8 @@ public class ConfigurationHandler implements InvocationHandler {
                 final String finalDefaultValue = defaultValue;
                 if (lookupType == long.class || lookupType == Long.class) {
                     this.defaultValue = Long.parseLong(finalDefaultValue);
+                } else if (lookupType == boolean.class || lookupType == Boolean.class) {
+                    this.defaultValue = Boolean.parseBoolean(finalDefaultValue);
                 } else if (lookupType == int.class || lookupType == Integer.class) {
                     this.defaultValue = Integer.parseInt(finalDefaultValue);
                 } else if (lookupType == double.class || lookupType == Double.class) {
