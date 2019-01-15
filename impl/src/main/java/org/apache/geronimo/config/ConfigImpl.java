@@ -202,8 +202,8 @@ public class ConfigImpl implements Config, AutoCloseable {
         return converter;
     }
 
-    public ConfigValueImpl<String> access(String key) {
-        return new ConfigValueImpl<>(this, key);
+    public <T> ConfigValueImpl<T> access(String key, Class<T> type) {
+        return new ConfigValueImpl<T>(this, key, type);
     }
 
     @Override
@@ -219,7 +219,7 @@ public class ConfigImpl implements Config, AutoCloseable {
     public synchronized void addConfigSources(List<ConfigSource> configSourcesToAdd) {
         List<ConfigSource> allConfigSources = new ArrayList<>(configSources);
         for (ConfigSource configSource : configSourcesToAdd) {
-            configSource.setOnAttributeChange(this::onAttributeChange);
+            configSource.setAttributeChangeCallback(this::onAttributeChange);
             allConfigSources.add(configSource);
         }
 

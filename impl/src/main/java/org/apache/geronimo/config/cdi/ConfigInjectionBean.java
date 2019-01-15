@@ -36,13 +36,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -164,11 +164,11 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
 
     private T getConfigValue(String key, String defaultValue, boolean evaluateVariables, Class clazz) {
         if (ConfigExtension.isDefaultUnset(defaultValue)) {
-            return (T) getConfig().access(key).as(clazz).evaluateVariables(evaluateVariables).getValue();
+            return (T) getConfig().access(key, clazz).evaluateVariables(evaluateVariables).build().getValue();
         }
         else {
             Config config = getConfig();
-            return (T) getConfig().access(key).as(clazz).evaluateVariables(evaluateVariables).getOptionalValue()
+            return (T) getConfig().access(key, clazz).evaluateVariables(evaluateVariables).build().getOptionalValue()
                     .orElse(((ConfigImpl) config).convert(defaultValue, clazz));
         }
     }
@@ -257,8 +257,8 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         }
 
         @Override
-        public TimeUnit cacheTimeUnit() {
-            return TimeUnit.SECONDS;
+        public ChronoUnit cacheForTimeUnit() {
+            return ChronoUnit.SECONDS;
         }
 
         @Override

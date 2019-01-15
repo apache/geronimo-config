@@ -20,14 +20,11 @@ import javax.config.ConfigSnapshot;
 import javax.config.ConfigAccessor;
 import javax.config.spi.Converter;
 
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.enterprise.inject.Typed;
@@ -36,7 +33,7 @@ import javax.enterprise.inject.Typed;
  * @author <a href="mailto:struberg@apache.org">Mark Struberg</a>
  */
 @Typed
-public class ConfigValueImpl<T> implements ConfigAccessor<T> {
+public class ConfigValueImpl<T> implements ConfigAccessor<T>, ConfigAccessor.Builder<T> {
     private static final Logger logger = Logger.getLogger(ConfigValueImpl.class.getName());
 
     private final ConfigImpl config;
@@ -56,9 +53,6 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
     private long lastReloadedAt = -1;
 
     private T lastValue = null;
-    //X will later get added again private ConfigChanged valueChangeListener;
-    private boolean isList;
-    private boolean isSet;
 
     private T defaultValue;
     private boolean withDefault;
@@ -68,66 +62,29 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
      */
     private Converter<T> converter;
 
-    public ConfigValueImpl(ConfigImpl config, String key) {
+    public ConfigValueImpl(ConfigImpl config, String key, Class<T> type) {
         this.config = config;
         this.keyOriginal = key;
+        this.configEntryType = type;
     }
 
-    @Override
-    public <N> ConfigValueImpl<N> as(Class<N> clazz) {
-        configEntryType = clazz;
-        return (ConfigValueImpl<N>) this;
-    }
 
     @Override
-    public ConfigAccessor<List<T>> asList() {
-        isList = true;
-        ConfigAccessor<List<T>> listTypedResolver = (ConfigAccessor<List<T>>) this;
-
-        if (defaultValue == null)
-        {
-            // the default for lists is an empty list instead of null
-            return listTypedResolver.withDefault(Collections.<T>emptyList());
-        }
-
-        return listTypedResolver;
-    }
-
-    @Override
-    public ConfigAccessor<Set<T>> asSet() {
-        isSet = true;
-        ConfigAccessor<Set<T>> listTypedResolver = (ConfigAccessor<Set<T>>) this;
-
-        if (defaultValue == null)
-        {
-            // the default for lists is an empty list instead of null
-            return listTypedResolver.withDefault(Collections.<T>emptySet());
-        }
-
-        return listTypedResolver;
-    }
-
-    @Override
-    public ConfigAccessor<T> withDefault(T value) {
+    public ConfigAccessor.Builder<T> withDefault(T value) {
         defaultValue = value;
         withDefault = true;
         return this;
     }
 
     @Override
-    public ConfigAccessor<T> withStringDefault(String value) {
+    public ConfigAccessor.Builder<T> withStringDefault(String value) {
         if (value == null || value.isEmpty()) {
             throw new RuntimeException("Empty String or null supplied as string-default value for property "
                     + keyOriginal);
         }
         value = replaceVariables(value);
 
-        if (isList) {
-            defaultValue = splitAndConvertListValue(value);
-        }
-        else {
-            defaultValue = convert(value);
-        }
+        defaultValue = convert(value);
         withDefault = true;
         return this;
     }
@@ -138,14 +95,19 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
     }
 
     @Override
-    public ConfigAccessor<T> useConverter(Converter<T> converter) {
+    public ConfigAccessor<T> build() {
+        return this;
+    }
+
+    @Override
+    public Builder<T> useConverter(Converter<T> converter) {
         this.converter = converter;
         return this;
     }
 
     @Override
-    public ConfigValueImpl<T> cacheFor(long value, TimeUnit timeUnit) {
-        this.cacheTimeNs = timeUnit.toNanos(value);
+    public ConfigValueImpl<T> cacheFor(Duration timeUnit) {
+        this.cacheTimeNs = timeUnit.toNanos();
         return this;
     }
 
@@ -238,6 +200,11 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
     }
 
     @Override
+    public Optional<T> getOptionalValue(ConfigSnapshot configSnapshot) {
+        return Optional.ofNullable(get());
+    }
+
+    @Override
     public T getValue(ConfigSnapshot configSnapshot) {
         ConfigSnapshotImpl snapshotImpl = (ConfigSnapshotImpl) configSnapshot;
 
@@ -275,6 +242,7 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
         }
 
         T value;
+/* TODO add array support
         if (isList || isSet) {
             value = splitAndConvertListValue(valueStr);
             if (isSet) {
@@ -282,8 +250,11 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
             }
         }
         else {
+*/
             value = convert ? convert(valueStr) : (T) valueStr;
+/*
         }
+*/
 
         //X will later get added again
         /*X
@@ -367,7 +338,7 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T> {
             {
                 break;
             }
-            String variableValue = config.access(varName).evaluateVariables(true).get();
+            String variableValue = config.access(varName, String.class).evaluateVariables(true).build().getValue();
             if (variableValue != null)
             {
                 value = value.replace("${" + varName + "}", variableValue);
