@@ -16,6 +16,8 @@
  */
 package org.apache.geronimo.config.test.internal;
 
+import java.util.Optional;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -54,6 +56,8 @@ public class ProviderTest extends Arquillian {
         System.setProperty(SOME_KEY, "someval");
         String myconfig = someBean.getMyconfig();
         Assert.assertEquals(myconfig, "someval");
+        Assert.assertEquals(someBean.getOptionalProvider().get().get(), "someval");
+        Assert.assertEquals(someBean.getProviderOptional().get().get(), "someval");
 
         System.setProperty(SOME_KEY, "otherval");
         myconfig = someBean.getMyconfig();
@@ -67,6 +71,22 @@ public class ProviderTest extends Arquillian {
         @Inject
         @ConfigProperty(name=SOME_KEY)
         private Provider<String> myconfig;
+
+        @Inject
+        @ConfigProperty(name=SOME_KEY)
+        private Optional<Provider<String>> optionalProvider;
+
+        @Inject
+        @ConfigProperty(name=SOME_KEY)
+        private Provider<Optional<String>> providerOptional;
+
+        public Optional<Provider<String>> getOptionalProvider() {
+            return optionalProvider;
+        }
+
+        public Provider<Optional<String>> getProviderOptional() {
+            return providerOptional;
+        }
 
         public String getMyconfig() {
             return myconfig.get();

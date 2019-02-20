@@ -16,6 +16,8 @@
  */
 package org.apache.geronimo.config.cdi;
 
+import static java.util.Optional.of;
+
 import org.apache.geronimo.config.ConfigImpl;
 import org.apache.geronimo.config.ConfigValueImpl;
 import org.eclipse.microprofile.config.Config;
@@ -24,6 +26,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.AnnotatedType;
@@ -34,11 +37,8 @@ import javax.enterprise.inject.spi.PassivationCapable;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Provider;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -113,24 +113,60 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         String key = getConfigKey(ip, configProperty);
         String defaultValue = configProperty.defaultValue();
 
-        if (annotated.getBaseType() instanceof ParameterizedType) {
-            ParameterizedType paramType = (ParameterizedType) annotated.getBaseType();
-            Type rawType = paramType.getRawType();
+        return toInstance(annotated.getBaseType(), key, defaultValue, true, false);
+    }
 
-            Class clazzParam = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
+    private T toInstance(final Type baseType, final String key,
+                         final String defaultValue, final boolean skipProviderLevel,
+                         final boolean acceptNull) {
+        if (baseType instanceof ParameterizedType) {
+            ParameterizedType paramType = (ParameterizedType) baseType;
+            Type rawType = paramType.getRawType();
+            if (paramType.getActualTypeArguments().length == 0) {
+                throw new IllegalArgumentException("No argument to " + paramType);
+            }
+
+            Type arg = paramType.getActualTypeArguments()[0];
+            if (!Class.class.isInstance(arg)) {
+                if (ParameterizedType.class.isInstance(arg)) {
+                    ParameterizedType nested = ParameterizedType.class.cast(arg);
+                    if (rawType == Optional.class) {
+                        return (T) of(toInstance(nested, key, defaultValue, false, acceptNull));
+                    }
+                    if (rawType == Provider.class) {
+                        if (nested.getActualTypeArguments().length != 1) {
+                            throw new IllegalArgumentException("Invalid arguments for " + paramType);
+                        }
+                        return skipProviderLevel ?
+                                toInstance(nested, key, defaultValue, false, acceptNull) :
+                                (T) (Provider<?>) () -> toInstance(nested, key, defaultValue, false, acceptNull);
+                    }
+                    if (rawType == Supplier.class) {
+                        if (nested.getActualTypeArguments().length != 1) {
+                            throw new IllegalArgumentException("Invalid arguments for " + paramType);
+                        }
+                        return (T) (Supplier<?>) () -> toInstance(nested, key, defaultValue, false, true);
+                    }
+                }
+                throw new IllegalArgumentException("Unsupported multiple generics level: " + paramType);
+            }
+
+            Class clazzParam = (Class) arg;
 
             // handle Provider<T>
-            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Provider.class) && paramType.getActualTypeArguments().length == 1) {
-                return getConfigValue(key, defaultValue, clazzParam);
+            if (rawType instanceof Class && rawType == Provider.class && paramType.getActualTypeArguments().length == 1) {
+                return skipProviderLevel ?
+                        toInstance(clazzParam, key, defaultValue, false, acceptNull) :
+                        (T) (Provider<?>) () -> toInstance(clazzParam, key, defaultValue, false, acceptNull);
             }
 
             // handle Optional<T>
-            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Optional.class) && paramType.getActualTypeArguments().length == 1) {
+            if (rawType instanceof Class && rawType == Optional.class && paramType.getActualTypeArguments().length == 1) {
                 return (T) getConfig().getOptionalValue(key, clazzParam);
             }
 
-            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Supplier.class) && paramType.getActualTypeArguments().length == 1) {
-                return (T) new ConfigSupplier(clazzParam, key, defaultValue, (ConfigImpl)getConfig());
+            if (rawType instanceof Class && rawType == Supplier.class && paramType.getActualTypeArguments().length == 1) {
+                return (T) (Supplier<?>) () -> toInstance(clazzParam, key, defaultValue, false, true);
             }
 
             if (Set.class.equals(rawType)) {
@@ -139,13 +175,10 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
             if (List.class.equals(rawType)) {
                 return (T) getList(key, clazzParam, defaultValue);
             }
+            throw new IllegalStateException("unhandled ConfigProperty");
         }
-        else {
-            Class clazz = (Class) annotated.getBaseType();
-            return getConfigValue(key, defaultValue, clazz);
-        }
-
-        throw new IllegalStateException("unhandled ConfigProperty");
+        Class clazz = (Class) baseType;
+        return getConfigValue(key, defaultValue, clazz, acceptNull);
     }
 
     private List getList(String key, Class clazzParam, String defaultValue) {
@@ -163,8 +196,11 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         return (List) configValue.get();
     }
 
-    private T getConfigValue(String key, String defaultValue, Class clazz) {
+    private T getConfigValue(String key, String defaultValue, Class clazz, boolean canBeNull) {
         if (ConfigExtension.isDefaultUnset(defaultValue)) {
+            if (canBeNull) {
+                return (T) getConfig().getOptionalValue(key, clazz).orElse(null);
+            }
             return (T) getConfig().getValue(key, clazz);
         }
         else {
