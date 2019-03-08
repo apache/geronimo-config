@@ -52,7 +52,6 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <javaconfig.version>1.0-SNAPSHOT</javaconfig.version>
-        <microprofile-config.version>1.1</microprofile-config.version>
 
         <!-- OWB -->
         <owb.version>1.7.5</owb.version>
@@ -124,23 +123,4 @@
     </build>
 
 
-    <profiles>
-        <profile>
-            <id>eclipse-repo</id>
-            <repositories>
-                <repository>
-                    <id>microprofile-snapshots</id>
-                    <releases><enabled>false</enabled></releases>
-                    <snapshots><enabled>true</enabled></snapshots>
-                    <url>https://repo.eclipse.org/content/groups/microprofile/</url>
-                </repository>
-                <repository>
-                    <id>microprofile-releases</id>
-                    <releases><enabled>true</enabled></releases>
-                    <snapshots><enabled>false</enabled></snapshots>
-                    <url>https://repo.eclipse.org/content/repositories/microprofile-releases</url>
-                </repository>
-            </repositories>
-        </profile>
-    </profiles>
 </project>
