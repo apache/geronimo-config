@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
@@ -37,8 +38,7 @@ import javax.config.spi.ConfigProviderResolver;
 @Vetoed
 public class DefaultConfigProvider extends ConfigProviderResolver {
 
-    private static Map<ClassLoader, WeakReference<Config>> configs
-            = Collections.synchronizedMap(new WeakHashMap<ClassLoader, WeakReference<Config>>());
+    private static Map<ClassLoader, Config> configs = new ConcurrentHashMap<>();
 
 
     @Override
@@ -68,15 +68,14 @@ public class DefaultConfigProvider extends ConfigProviderResolver {
     }
 
     Config existingConfig(ClassLoader forClassLoader) {
-        WeakReference<Config> configRef = configs.get(forClassLoader);
-        return configRef != null ? configRef.get() : null;
+        return configs.get(forClassLoader);
     }
 
 
     @Override
     public void registerConfig(Config config, ClassLoader forClassLoader) {
         synchronized (DefaultConfigProvider.class) {
-            configs.put(forClassLoader, new WeakReference<>(config));
+            configs.put(forClassLoader, config);
         }
     }
 
@@ -99,24 +98,25 @@ public class DefaultConfigProvider extends ConfigProviderResolver {
 
         if (config != null) {
             synchronized (DefaultConfigProvider.class) {
-                Iterator<Map.Entry<ClassLoader, WeakReference<Config>>> it = configs.entrySet().iterator();
+                Iterator<Map.Entry<ClassLoader, Config>> it = configs.entrySet().iterator();
                 while (it.hasNext()) {
-                    Map.Entry<ClassLoader, WeakReference<Config>> entry = it.next();
-                    if (entry.getValue().get() != null && entry.getValue().get() == config) {
+                    Map.Entry<ClassLoader, Config> entry = it.next();
+                    if (entry.getValue() != null && entry.getValue() == config) {
                         it.remove();
                         break;
                     }
                 }
+            }
 
-                if (config instanceof AutoCloseable) {
-                    try {
-                        ((AutoCloseable) config).close();
-                    }
-                    catch (Exception e) {
-                        throw new RuntimeException("Error while closing Config", e);
-                    }
+            if (config instanceof AutoCloseable) {
+                try {
+                    ((AutoCloseable) config).close();
+                }
+                catch (Exception e) {
+                    throw new RuntimeException("Error while closing Config", e);
                 }
             }
+
         }
     }
 }
