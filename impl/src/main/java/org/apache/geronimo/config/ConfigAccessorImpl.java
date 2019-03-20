@@ -33,8 +33,8 @@ import javax.enterprise.inject.Typed;
  * @author <a href="mailto:struberg@apache.org">Mark Struberg</a>
  */
 @Typed
-public class ConfigValueImpl<T> implements ConfigAccessor<T>, ConfigAccessor.Builder<T> {
-    private static final Logger logger = Logger.getLogger(ConfigValueImpl.class.getName());
+public class ConfigAccessorImpl<T> implements ConfigAccessor<T>, ConfigAccessor.Builder<T> {
+    private static final Logger logger = Logger.getLogger(ConfigAccessorImpl.class.getName());
 
     private final ConfigImpl config;
 
@@ -62,7 +62,7 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T>, ConfigAccessor.Bui
      */
     private Converter<T> converter;
 
-    public ConfigValueImpl(ConfigImpl config, String key, Class<T> type) {
+    public ConfigAccessorImpl(ConfigImpl config, String key, Class<T> type) {
         this.config = config;
         this.keyOriginal = key;
         this.configEntryType = type;
@@ -106,18 +106,19 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T>, ConfigAccessor.Bui
     }
 
     @Override
-    public ConfigValueImpl<T> cacheFor(Duration timeUnit) {
+    public ConfigAccessorImpl<T> cacheFor(Duration timeUnit) {
         this.cacheTimeNs = timeUnit.toNanos();
         return this;
     }
 
     @Override
-    public ConfigValueImpl<T> evaluateVariables(boolean evaluateVariables) {
+    public ConfigAccessorImpl<T> evaluateVariables(boolean evaluateVariables) {
         this.evaluateVariables = evaluateVariables;
         return this;
     }
 
-    public ConfigValueImpl<T> addLookupSuffix(String suffixValue) {
+    @Override
+    public ConfigAccessorImpl<T> addLookupSuffix(String suffixValue) {
         if (lookupChain == null) {
             lookupChain = new ArrayList<>();
         }
@@ -125,7 +126,8 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T>, ConfigAccessor.Bui
         return this;
     }
 
-    public ConfigValueImpl<T> addLookupSuffix(ConfigAccessor<String> suffixAccessor) {
+    @Override
+    public ConfigAccessorImpl<T> addLookupSuffix(ConfigAccessor<String> suffixAccessor) {
         if (lookupChain == null) {
             lookupChain = new ArrayList<>();
         }
@@ -140,7 +142,7 @@ public class ConfigValueImpl<T> implements ConfigAccessor<T>, ConfigAccessor.Bui
 
     //X will later get added again @Override
     /*X
-    public ConfigValueImpl<T> onChange(ConfigChanged valueChangeListener) {
+    public ConfigAccessorImpl<T> onChange(ConfigChanged valueChangeListener) {
         this.valueChangeListener = valueChangeListener;
         return this;
     }

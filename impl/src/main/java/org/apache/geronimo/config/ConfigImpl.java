@@ -202,8 +202,8 @@ public class ConfigImpl implements Config, AutoCloseable {
         return converter;
     }
 
-    public <T> ConfigValueImpl<T> access(String key, Class<T> type) {
-        return new ConfigValueImpl<T>(this, key, type);
+    public <T> ConfigAccessorImpl<T> access(String key, Class<T> type) {
+        return new ConfigAccessorImpl<T>(this, key, type);
     }
 
     @Override
