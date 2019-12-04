@@ -71,7 +71,12 @@ public class ConfigExtension implements Extension {
     private Set<Class<?>> proxies = new HashSet<>();
     private List<Class<?>> validProxies;
     private List<ProxyBean<?>> proxyBeans;
+    private boolean hasConfigProxy;
+    private ConfigBean configBean;
 
+    public ConfigExtension() {
+        config = ConfigProvider.getConfig(); // ensure to store the ref the whole lifecycle, java gc is aggressive now
+    }
 
     public void findProxies(@Observes ProcessAnnotatedType<?> pat) {
         final Class<?> javaClass = pat.getAnnotatedType().getJavaClass();
@@ -103,6 +108,11 @@ public class ConfigExtension implements Extension {
         types.addAll(providerTypes);
 
         types.stream()
+                .peek(type -> {
+                    if (type == Config.class) {
+                        hasConfigProxy = true;
+                    }
+                })
                 .map(type -> new ConfigInjectionBean(bm, type))
                 .forEach(abd::addBean);
 
@@ -115,18 +125,24 @@ public class ConfigExtension implements Extension {
                                      .collect(toList());
             proxyBeans.forEach(abd::addBean);
         } // else there are errors
+
+        if (!hasConfigProxy) {
+            configBean = new ConfigBean();
+            abd.addBean(configBean);
+        }
     }
 
     public void validate(@Observes AfterDeploymentValidation add) {
         List<String> deploymentProblems = new ArrayList<>();
-
-        config = ConfigProvider.getConfig();
 
         StreamSupport.stream(config.getConfigSources().spliterator(), false)
                      .filter(Reloadable.class::isInstance)
                      .map(Reloadable.class::cast)
                      .forEach(Reloadable::reload);
 
+        if (!hasConfigProxy) {
+            configBean.init(config);
+        }
         proxyBeans.forEach(b -> b.init(config));
         proxyBeans.clear();
 
