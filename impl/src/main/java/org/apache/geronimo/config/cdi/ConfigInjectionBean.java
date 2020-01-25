@@ -26,7 +26,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.AnnotatedType;
@@ -112,7 +111,6 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         ConfigProperty configProperty = annotated.getAnnotation(ConfigProperty.class);
         String key = getConfigKey(ip, configProperty);
         String defaultValue = configProperty.defaultValue();
-
         return toInstance(annotated.getBaseType(), key, defaultValue, true, false);
     }
 
@@ -205,6 +203,10 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         }
         else {
             Config config = getConfig();
+            if (ConfigExtension.isDefaultNullValue(defaultValue)) {
+                return (T) config.getOptionalValue(key, clazz)
+                        .orElse(((ConfigImpl) config).convert(null, clazz));
+            }
             return (T) config.getOptionalValue(key, clazz)
                     .orElse(((ConfigImpl) config).convert(defaultValue, clazz));
         }

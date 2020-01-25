@@ -16,14 +16,16 @@
  */
 package org.apache.geronimo.config;
 
+import org.apache.geronimo.config.converters.ByteConverter;
+import org.apache.geronimo.config.converters.CharacterConverter;
 import org.apache.geronimo.config.converters.ClassConverter;
 import org.apache.geronimo.config.converters.DurationConverter;
+import org.apache.geronimo.config.converters.ShortConverter;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.Vetoed;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -87,6 +89,12 @@ public class ConfigImpl implements Config, AutoCloseable {
         converters.put(int.class, IntegerConverter.INSTANCE);
         converters.put(Long.class, LongConverter.INSTANCE);
         converters.put(long.class, LongConverter.INSTANCE);
+        converters.put(Byte.class, ByteConverter.INSTANCE);
+        converters.put(byte.class, ByteConverter.INSTANCE);
+        converters.put(Short.class, ShortConverter.INSTANCE);
+        converters.put(short.class, ShortConverter.INSTANCE);
+        converters.put(Character.class, CharacterConverter.INSTANCE);
+        converters.put(char.class, CharacterConverter.INSTANCE);
 
         converters.put(Class.class, ClassConverter.INSTANCE);
         converters.put(Duration.class, DurationConverter.INSTANCE);

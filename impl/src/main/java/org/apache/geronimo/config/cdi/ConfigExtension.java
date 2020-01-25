@@ -65,6 +65,9 @@ public class ConfigExtension implements Extension {
         REPLACED_TYPES.put(float.class, Float.class);
         REPLACED_TYPES.put(long.class, Long.class);
         REPLACED_TYPES.put(boolean.class, Boolean.class);
+        REPLACED_TYPES.put(byte.class, Byte.class);
+        REPLACED_TYPES.put(short.class, Short.class);
+        REPLACED_TYPES.put(char.class, Character.class);
     }
 
     private Set<InjectionPoint> injectionPoints = new HashSet<>();
@@ -189,5 +192,9 @@ public class ConfigExtension implements Extension {
 
     static boolean isDefaultUnset(String defaultValue) {
         return defaultValue.equals(ConfigProperty.UNCONFIGURED_VALUE);
+    }
+
+    static boolean isDefaultNullValue(String defaultValue) {
+        return defaultValue.equals(ConfigProperty.NULL_VALUE);
     }
 }
