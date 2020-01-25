@@ -18,8 +18,14 @@ package org.apache.geronimo.config.test.internal;
 
 import static java.util.Arrays.asList;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
+import java.net.URL;
+import java.time.Duration;
 import java.util.Collection;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -68,6 +74,26 @@ public class ProxyTest extends Arquillian {
         assertEquals(proxy.list(), asList("a", "b", "1"));
         assertEquals(proxy.listDefaults(), asList(1, 2, 1));
         assertEquals(proxy.listClasses(), asList(String.class, Integer.class));
+
+        assertNull(proxy.booleanNullValue());
+        assertNull(proxy.stringNullValue());
+        assertNull(proxy.byteNullValue());
+        assertNull(proxy.integerNullValue());
+        assertNull(proxy.longNullValue());
+        assertNull(proxy.shortNullValue());
+        assertNull(proxy.listNullValue());
+        assertNull(proxy.classNullValue());
+        assertNull(proxy.doubleNullValue());
+        assertNull(proxy.durationNullValue());
+
+        assertFalse(proxy.primitiveBooleanNullValue());
+        assertEquals(0, proxy.primitiveLongNullValue());
+        assertEquals(0, proxy.primitiveIntegerNullValue());
+        assertEquals(0, proxy.primitiveShortNullValue());
+        assertEquals(0, proxy.primitiveByteNullValue());
+        assertEquals(0.0F, proxy.primitiveFloatNullValue());
+        assertEquals(0.0D, proxy.primitiveDoubleNullValue());
+        assertEquals('\u0000', proxy.primitiveCharacterNullValue());
     }
 
     @Test
@@ -102,5 +128,68 @@ public class ProxyTest extends Arquillian {
 
         @ConfigProperty(defaultValue = "1,2,1")
         Collection<Integer> listDefaults();
+
+        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        Boolean booleanNullValue();
+
+        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        boolean primitiveBooleanNullValue();
+
+        @ConfigProperty(name = "string.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        String stringNullValue();
+
+        @ConfigProperty(name = "long.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        Long longNullValue();
+
+        @ConfigProperty(name = "long.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        long primitiveLongNullValue();
+
+        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        Integer integerNullValue();
+
+        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        int primitiveIntegerNullValue();
+
+        @ConfigProperty(name = "float.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        Float floatNullValue();
+
+        @ConfigProperty(name = "float.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        float primitiveFloatNullValue();
+
+        @ConfigProperty(name = "double.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        Double doubleNullValue();
+
+        @ConfigProperty(name = "double.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        double primitiveDoubleNullValue();
+
+        @ConfigProperty(name = "character.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        Character characterNullValue();
+
+        @ConfigProperty(name = "character.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        char primitiveCharacterNullValue();
+
+        @ConfigProperty(name = "short.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        Short shortNullValue();
+
+        @ConfigProperty(name = "short.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        short primitiveShortNullValue();
+
+        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        Byte byteNullValue();
+
+        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        byte primitiveByteNullValue();
+
+        @ConfigProperty(name = "list.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        List<String> listNullValue();
+
+        @ConfigProperty(name = "class.nullvalue.default", defaultValue =  ConfigProperty.NULL_VALUE)
+        Class classNullValue();
+
+        @ConfigProperty(name = "url.nullvalue.default", defaultValue =  ConfigProperty.NULL_VALUE)
+        URL urlNullValue();
+
+        @ConfigProperty(name = "duration.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        Duration durationNullValue();
     }
 }

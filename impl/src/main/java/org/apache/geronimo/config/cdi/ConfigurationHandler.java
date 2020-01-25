@@ -125,7 +125,32 @@ public class ConfigurationHandler implements InvocationHandler {
             if (hasDefault) {
                 final Config config = ConfigProvider.getConfig();
                 final String finalDefaultValue = defaultValue;
-                if (lookupType == long.class || lookupType == Long.class) {
+
+                if (ConfigExtension.isDefaultNullValue(finalDefaultValue)) {
+                    if (lookupType.isPrimitive()) {
+                        if (lookupType == long.class) {
+                            this.defaultValue = 0L;
+                        } else if (lookupType == boolean.class) {
+                            this.defaultValue = false;
+                        } else if (lookupType == int.class ) {
+                            this.defaultValue = 0;
+                        } else if (lookupType == double.class) {
+                            this.defaultValue = 0.0D;
+                        } else if (lookupType == float.class) {
+                            this.defaultValue = 0.0F;
+                        } else if (lookupType == short.class) {
+                            this.defaultValue = (short) 0;
+                        } else if (lookupType == char.class) {
+                            this.defaultValue = '\u0000';
+                        } else if (lookupType == byte.class) {
+                            this.defaultValue = (byte) 0;
+                        } else {
+                            this.defaultValue = null;
+                        }
+                    } else {
+                        this.defaultValue = null;
+                    }
+                } else if (lookupType == long.class || lookupType == Long.class) {
                     this.defaultValue = Long.parseLong(finalDefaultValue);
                 } else if (lookupType == boolean.class || lookupType == Boolean.class) {
                     this.defaultValue = Boolean.parseBoolean(finalDefaultValue);
@@ -139,7 +164,9 @@ public class ConfigurationHandler implements InvocationHandler {
                     this.defaultValue = Short.parseShort(finalDefaultValue);
                 } else if (lookupType == char.class || lookupType == Character.class) {
                     this.defaultValue = finalDefaultValue
-                                                  .charAt(0);
+                            .charAt(0);
+                } else if (lookupType == byte.class || lookupType == Byte.class) {
+                        this.defaultValue = Byte.parseByte(finalDefaultValue);
                 } else if (collectionCollector != null) {
                     this.defaultValue = convert(finalDefaultValue, config);
                 } else if (lookupType == String.class) {
