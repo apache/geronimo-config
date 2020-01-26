@@ -120,62 +120,58 @@ public class ConfigurationHandler implements InvocationHandler {
             key = prefix + (annotation.name().isEmpty() ? m.getDeclaringClass().getName() + "." + m.getName() : annotation.name());
 
             final String defaultValue = annotation.defaultValue();
-            final boolean hasDefault = !defaultValue.equals(ConfigProperty.UNCONFIGURED_VALUE);
+            final boolean canBeNull = ConfigProperty.NULL_VALUE.equals(defaultValue);
+            final boolean hasDefault = !ConfigProperty.UNCONFIGURED_VALUE.equals(defaultValue) && !canBeNull;
 
             if (hasDefault) {
                 final Config config = ConfigProvider.getConfig();
-                final String finalDefaultValue = defaultValue;
-
-                if (ConfigExtension.isDefaultNullValue(finalDefaultValue)) {
-                    if (lookupType.isPrimitive()) {
-                        if (lookupType == long.class) {
-                            this.defaultValue = 0L;
-                        } else if (lookupType == boolean.class) {
-                            this.defaultValue = false;
-                        } else if (lookupType == int.class ) {
-                            this.defaultValue = 0;
-                        } else if (lookupType == double.class) {
-                            this.defaultValue = 0.0D;
-                        } else if (lookupType == float.class) {
-                            this.defaultValue = 0.0F;
-                        } else if (lookupType == short.class) {
-                            this.defaultValue = (short) 0;
-                        } else if (lookupType == char.class) {
-                            this.defaultValue = '\u0000';
-                        } else if (lookupType == byte.class) {
-                            this.defaultValue = (byte) 0;
-                        } else {
-                            this.defaultValue = null;
-                        }
-                    } else {
-                        this.defaultValue = null;
-                    }
-                } else if (lookupType == long.class || lookupType == Long.class) {
-                    this.defaultValue = Long.parseLong(finalDefaultValue);
+                if (lookupType == long.class || lookupType == Long.class) {
+                    this.defaultValue = Long.parseLong(defaultValue);
                 } else if (lookupType == boolean.class || lookupType == Boolean.class) {
-                    this.defaultValue = Boolean.parseBoolean(finalDefaultValue);
+                    this.defaultValue = Boolean.parseBoolean(defaultValue);
                 } else if (lookupType == int.class || lookupType == Integer.class) {
-                    this.defaultValue = Integer.parseInt(finalDefaultValue);
+                    this.defaultValue = Integer.parseInt(defaultValue);
                 } else if (lookupType == double.class || lookupType == Double.class) {
-                    this.defaultValue = Double.parseDouble(finalDefaultValue);
+                    this.defaultValue = Double.parseDouble(defaultValue);
                 } else if (lookupType == float.class || lookupType == Float.class) {
-                    this.defaultValue = Float.parseFloat(finalDefaultValue);
+                    this.defaultValue = Float.parseFloat(defaultValue);
                 } else if (lookupType == short.class || lookupType == Short.class) {
-                    this.defaultValue = Short.parseShort(finalDefaultValue);
+                    this.defaultValue = Short.parseShort(defaultValue);
                 } else if (lookupType == char.class || lookupType == Character.class) {
-                    this.defaultValue = finalDefaultValue
-                            .charAt(0);
+                    this.defaultValue = defaultValue.charAt(0);
                 } else if (lookupType == byte.class || lookupType == Byte.class) {
-                        this.defaultValue = Byte.parseByte(finalDefaultValue);
+                    this.defaultValue = Byte.parseByte(defaultValue);
                 } else if (collectionCollector != null) {
-                    this.defaultValue = convert(finalDefaultValue, config);
+                    this.defaultValue = convert(defaultValue, config);
                 } else if (lookupType == String.class) {
-                    this.defaultValue = finalDefaultValue;
+                    this.defaultValue = defaultValue;
                 } else {
                     throw new IllegalArgumentException("Unsupported default for " + m);
                 }
             } else {
-                this.defaultValue = null;
+                if (lookupType.isPrimitive()) {
+                    if (lookupType == long.class) {
+                        this.defaultValue = 0L;
+                    } else if (lookupType == boolean.class) {
+                        this.defaultValue = false;
+                    } else if (lookupType == int.class ) {
+                        this.defaultValue = 0;
+                    } else if (lookupType == double.class) {
+                        this.defaultValue = 0.0D;
+                    } else if (lookupType == float.class) {
+                        this.defaultValue = 0.0F;
+                    } else if (lookupType == short.class) {
+                        this.defaultValue = (short) 0;
+                    } else if (lookupType == char.class) {
+                        this.defaultValue = '\u0000';
+                    } else if (lookupType == byte.class) {
+                        this.defaultValue = (byte) 0;
+                    } else {
+                        this.defaultValue = null;
+                    }
+                } else {
+                    this.defaultValue = null;
+                }
             }
         }
 

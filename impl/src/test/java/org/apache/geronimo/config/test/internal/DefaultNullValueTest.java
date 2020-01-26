@@ -53,25 +53,25 @@ public class DefaultNullValueTest extends Arquillian {
 
     @Test
     public void testDefaultNullValue() {
-        assertNull(injected.booleanNullValue);
-        assertNull(injected.stringNullValue);
-        assertNull(injected.byteNullValue);
-        assertNull(injected.integerNullValue);
-        assertNull(injected.longNullValue);
-        assertNull(injected.shortNullValue);
-        assertNull(injected.listNullValue);
-        assertNull(injected.classNullValue);
-        assertNull(injected.doubleNullValue);
-        assertNull(injected.durationNullValue);
+        assertNull(injected.getBooleanNullValue());
+        assertNull(injected.getStringNullValue());
+        assertNull(injected.getByteNullValue());
+        assertNull(injected.getIntegerNullValue());
+        assertNull(injected.getLongNullValue());
+        assertNull(injected.getShortNullValue());
+        assertNull(injected.getListNullValue());
+        assertNull(injected.getClassNullValue());
+        assertNull(injected.getDoubleNullValue());
+        assertNull(injected.getDurationNullValue());
 
-        assertFalse(injected.primitiveBooleanNullValue);
-        assertEquals(0, injected.primitiveLongNullValue);
-        assertEquals(0, injected.primitiveIntegerNullValue);
-        assertEquals(0, injected.primitiveShortNullValue);
-        assertEquals(0, injected.primitiveByteNullValue);
-        assertEquals(0.0F, injected.primitiveFloatNullValue);
-        assertEquals(0.0D, injected.primitiveDoubleNullValue);
-        assertEquals('\u0000', injected.primitiveCharacterNullValue);
+        assertFalse(injected.isPrimitiveBooleanNullValue());
+        assertEquals(0, injected.getPrimitiveLongNullValue());
+        assertEquals(0, injected.getPrimitiveIntegerNullValue());
+        assertEquals(0, injected.getPrimitiveShortNullValue());
+        assertEquals(0, injected.getPrimitiveByteNullValue());
+        assertEquals(0.0F, injected.getPrimitiveFloatNullValue());
+        assertEquals(0.0D, injected.getPrimitiveDoubleNullValue());
+        assertEquals('\u0000', injected.getPrimitiveCharacterNullValue());
 
     }
 
@@ -161,5 +161,89 @@ public class DefaultNullValueTest extends Arquillian {
         @Inject
         @ConfigProperty(name = "duration.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
         private Duration durationNullValue;
+
+        public Boolean getBooleanNullValue() {
+            return booleanNullValue;
+        }
+
+        public boolean isPrimitiveBooleanNullValue() {
+            return primitiveBooleanNullValue;
+        }
+
+        public String getStringNullValue() {
+            return stringNullValue;
+        }
+
+        public Long getLongNullValue() {
+            return longNullValue;
+        }
+
+        public long getPrimitiveLongNullValue() {
+            return primitiveLongNullValue;
+        }
+
+        public Integer getIntegerNullValue() {
+            return integerNullValue;
+        }
+
+        public int getPrimitiveIntegerNullValue() {
+            return primitiveIntegerNullValue;
+        }
+
+        public Float getFloatNullValue() {
+            return floatNullValue;
+        }
+
+        public float getPrimitiveFloatNullValue() {
+            return primitiveFloatNullValue;
+        }
+
+        public Double getDoubleNullValue() {
+            return doubleNullValue;
+        }
+
+        public double getPrimitiveDoubleNullValue() {
+            return primitiveDoubleNullValue;
+        }
+
+        public Character getCharacterNullValue() {
+            return characterNullValue;
+        }
+
+        public char getPrimitiveCharacterNullValue() {
+            return primitiveCharacterNullValue;
+        }
+
+        public Short getShortNullValue() {
+            return shortNullValue;
+        }
+
+        public short getPrimitiveShortNullValue() {
+            return primitiveShortNullValue;
+        }
+
+        public Byte getByteNullValue() {
+            return byteNullValue;
+        }
+
+        public byte getPrimitiveByteNullValue() {
+            return primitiveByteNullValue;
+        }
+
+        public List<String> getListNullValue() {
+            return listNullValue;
+        }
+
+        public Class getClassNullValue() {
+            return classNullValue;
+        }
+
+        public URL getUrlNullValue() {
+            return urlNullValue;
+        }
+
+        public Duration getDurationNullValue() {
+            return durationNullValue;
+        }
     }
 }

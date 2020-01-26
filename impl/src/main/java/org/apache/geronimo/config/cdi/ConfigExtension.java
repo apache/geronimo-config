@@ -191,10 +191,6 @@ public class ConfigExtension implements Extension {
     }
 
     static boolean isDefaultUnset(String defaultValue) {
-        return defaultValue.equals(ConfigProperty.UNCONFIGURED_VALUE);
-    }
-
-    static boolean isDefaultNullValue(String defaultValue) {
-        return defaultValue.equals(ConfigProperty.NULL_VALUE);
+        return ConfigProperty.UNCONFIGURED_VALUE.equals(defaultValue);
     }
 }
