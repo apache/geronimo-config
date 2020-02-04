@@ -120,7 +120,7 @@ public class ConfigurationHandler implements InvocationHandler {
             key = prefix + (annotation.name().isEmpty() ? m.getDeclaringClass().getName() + "." + m.getName() : annotation.name());
 
             final String defaultValue = annotation.defaultValue();
-            final boolean canBeNull = ConfigProperty.NULL_VALUE.equals(defaultValue);
+            final boolean canBeNull = ConfigImpl.ORG_APACHE_GERONIMO_CONFIG_NULLVALUE.equals(defaultValue);
             final boolean hasDefault = !ConfigProperty.UNCONFIGURED_VALUE.equals(defaultValue) && !canBeNull;
 
             if (hasDefault) {

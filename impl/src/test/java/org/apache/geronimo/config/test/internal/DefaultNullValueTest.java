@@ -62,6 +62,9 @@ public class DefaultNullValueTest extends Arquillian {
         assertNull(injected.getListNullValue());
         assertNull(injected.getClassNullValue());
         assertNull(injected.getDoubleNullValue());
+        assertNull(injected.getFloatNullValue());
+        assertNull(injected.getCharacterNullValue());
+        assertNull(injected.getUrlNullValue());
         assertNull(injected.getDurationNullValue());
 
         assertFalse(injected.isPrimitiveBooleanNullValue());
@@ -79,87 +82,87 @@ public class DefaultNullValueTest extends Arquillian {
     public static class Injected {
 
         @Inject
-        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private Boolean booleanNullValue;
 
         @Inject
-        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private boolean primitiveBooleanNullValue;
 
         @Inject
-        @ConfigProperty(name = "string.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "string.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private String stringNullValue;
 
         @Inject
-        @ConfigProperty(name = "long.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "long.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private Long longNullValue;
 
         @Inject
-        @ConfigProperty(name = "long.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "long.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private long primitiveLongNullValue;
 
         @Inject
-        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private Integer integerNullValue;
 
         @Inject
-        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private int primitiveIntegerNullValue;
 
         @Inject
-        @ConfigProperty(name = "float.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "float.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private Float floatNullValue;
 
         @Inject
-        @ConfigProperty(name = "float.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "float.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private float primitiveFloatNullValue;
 
         @Inject
-        @ConfigProperty(name = "double.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "double.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private Double doubleNullValue;
 
         @Inject
-        @ConfigProperty(name = "double.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "double.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private double primitiveDoubleNullValue;
 
         @Inject
-        @ConfigProperty(name = "character.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "character.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private Character characterNullValue;
 
         @Inject
-        @ConfigProperty(name = "character.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "character.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private char primitiveCharacterNullValue;
 
         @Inject
-        @ConfigProperty(name = "short.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "short.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private Short shortNullValue;
 
         @Inject
-        @ConfigProperty(name = "short.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "short.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private short primitiveShortNullValue;
 
         @Inject
-        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private Byte byteNullValue;
 
         @Inject
-        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private byte primitiveByteNullValue;
 
         @Inject
-        @ConfigProperty(name = "list.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "list.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private List<String> listNullValue;
 
         @Inject
-        @ConfigProperty(name = "class.nullvalue.default", defaultValue =  ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "class.nullvalue.default", defaultValue =  "org.apache.geronimo.config.nullvalue")
         private Class classNullValue;
 
         @Inject
-        @ConfigProperty(name = "url.nullvalue.default", defaultValue =  ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "url.nullvalue.default", defaultValue =  "org.apache.geronimo.config.nullvalue")
         private URL urlNullValue;
 
         @Inject
-        @ConfigProperty(name = "duration.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "duration.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         private Duration durationNullValue;
 
         public Boolean getBooleanNullValue() {

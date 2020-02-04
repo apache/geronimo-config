@@ -63,6 +63,7 @@ import javax.annotation.Priority;
 @Typed
 @Vetoed
 public class ConfigImpl implements Config, AutoCloseable {
+    public static final String ORG_APACHE_GERONIMO_CONFIG_NULLVALUE = "org.apache.geronimo.config.nullvalue";
     protected Logger logger = Logger.getLogger(ConfigImpl.class.getName());
 
     protected List<ConfigSource> configSources = new ArrayList<>();

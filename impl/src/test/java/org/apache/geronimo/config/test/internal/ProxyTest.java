@@ -129,67 +129,67 @@ public class ProxyTest extends Arquillian {
         @ConfigProperty(defaultValue = "1,2,1")
         Collection<Integer> listDefaults();
 
-        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         Boolean booleanNullValue();
 
-        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         boolean primitiveBooleanNullValue();
 
-        @ConfigProperty(name = "string.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "string.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         String stringNullValue();
 
-        @ConfigProperty(name = "long.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "long.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         Long longNullValue();
 
-        @ConfigProperty(name = "long.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "long.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         long primitiveLongNullValue();
 
-        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         Integer integerNullValue();
 
-        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         int primitiveIntegerNullValue();
 
-        @ConfigProperty(name = "float.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "float.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         Float floatNullValue();
 
-        @ConfigProperty(name = "float.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "float.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         float primitiveFloatNullValue();
 
-        @ConfigProperty(name = "double.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "double.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         Double doubleNullValue();
 
-        @ConfigProperty(name = "double.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "double.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         double primitiveDoubleNullValue();
 
-        @ConfigProperty(name = "character.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "character.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         Character characterNullValue();
 
-        @ConfigProperty(name = "character.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "character.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         char primitiveCharacterNullValue();
 
-        @ConfigProperty(name = "short.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "short.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         Short shortNullValue();
 
-        @ConfigProperty(name = "short.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "short.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         short primitiveShortNullValue();
 
-        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         Byte byteNullValue();
 
-        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         byte primitiveByteNullValue();
 
-        @ConfigProperty(name = "list.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "list.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         List<String> listNullValue();
 
-        @ConfigProperty(name = "class.nullvalue.default", defaultValue =  ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "class.nullvalue.default", defaultValue =  "org.apache.geronimo.config.nullvalue")
         Class classNullValue();
 
-        @ConfigProperty(name = "url.nullvalue.default", defaultValue =  ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "url.nullvalue.default", defaultValue =  "org.apache.geronimo.config.nullvalue")
         URL urlNullValue();
 
-        @ConfigProperty(name = "duration.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "duration.nullvalue.default", defaultValue = "org.apache.geronimo.config.nullvalue")
         Duration durationNullValue();
     }
 }

@@ -16,7 +16,6 @@
  */
 package org.apache.geronimo.config.cdi;
 
-import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 
 import java.lang.annotation.Annotation;
@@ -43,7 +42,6 @@ import javax.inject.Provider;
 
 import org.apache.geronimo.config.ConfigImpl;
 import org.apache.geronimo.config.ConfigValueImpl;
-import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -113,7 +111,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         final ConfigProperty configProperty = annotated.getAnnotation(ConfigProperty.class);
         final String key = getConfigKey(ip, configProperty);
         final String defaultValue = configProperty.defaultValue();
-        final boolean canBeNull = ConfigProperty.NULL_VALUE.equals(defaultValue);
+        final boolean canBeNull = ConfigImpl.ORG_APACHE_GERONIMO_CONFIG_NULLVALUE.equals(defaultValue);
         return toInstance(
                 annotated.getBaseType(),
                 key,
