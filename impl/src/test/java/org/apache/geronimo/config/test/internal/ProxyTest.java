@@ -129,67 +129,67 @@ public class ProxyTest extends Arquillian {
         @ConfigProperty(defaultValue = "1,2,1")
         Collection<Integer> listDefaults();
 
-        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "boolean.nullvalue.default")
         Boolean booleanNullValue();
 
-        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "boolean.nullvalue.default")
         boolean primitiveBooleanNullValue();
 
-        @ConfigProperty(name = "string.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "string.nullvalue.default")
         String stringNullValue();
 
-        @ConfigProperty(name = "long.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "long.nullvalue.default")
         Long longNullValue();
 
-        @ConfigProperty(name = "long.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "long.nullvalue.default")
         long primitiveLongNullValue();
 
-        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "integer.nullvalue.default")
         Integer integerNullValue();
 
-        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "integer.nullvalue.default")
         int primitiveIntegerNullValue();
 
-        @ConfigProperty(name = "float.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "float.nullvalue.default")
         Float floatNullValue();
 
-        @ConfigProperty(name = "float.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "float.nullvalue.default")
         float primitiveFloatNullValue();
 
-        @ConfigProperty(name = "double.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "double.nullvalue.default")
         Double doubleNullValue();
 
-        @ConfigProperty(name = "double.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "double.nullvalue.default")
         double primitiveDoubleNullValue();
 
-        @ConfigProperty(name = "character.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "character.nullvalue.default")
         Character characterNullValue();
 
-        @ConfigProperty(name = "character.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "character.nullvalue.default")
         char primitiveCharacterNullValue();
 
-        @ConfigProperty(name = "short.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "short.nullvalue.default")
         Short shortNullValue();
 
-        @ConfigProperty(name = "short.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "short.nullvalue.default")
         short primitiveShortNullValue();
 
-        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "byte.nullvalue.default")
         Byte byteNullValue();
 
-        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "byte.nullvalue.default")
         byte primitiveByteNullValue();
 
-        @ConfigProperty(name = "list.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "list.nullvalue.default")
         List<String> listNullValue();
 
-        @ConfigProperty(name = "class.nullvalue.default", defaultValue =  ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "class.nullvalue.default")
         Class classNullValue();
 
-        @ConfigProperty(name = "url.nullvalue.default", defaultValue =  ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "url.nullvalue.default")
         URL urlNullValue();
 
-        @ConfigProperty(name = "duration.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
+        @ConfigProperty(name = "duration.nullvalue.default")
         Duration durationNullValue();
     }
 }

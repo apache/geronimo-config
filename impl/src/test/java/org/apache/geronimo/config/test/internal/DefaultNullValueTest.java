@@ -32,9 +32,8 @@ import javax.inject.Inject;
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 
 /**
@@ -63,187 +62,113 @@ public class DefaultNullValueTest extends Arquillian {
         assertNull(injected.getClassNullValue());
         assertNull(injected.getDoubleNullValue());
         assertNull(injected.getDurationNullValue());
-
-        assertFalse(injected.isPrimitiveBooleanNullValue());
-        assertEquals(0, injected.getPrimitiveLongNullValue());
-        assertEquals(0, injected.getPrimitiveIntegerNullValue());
-        assertEquals(0, injected.getPrimitiveShortNullValue());
-        assertEquals(0, injected.getPrimitiveByteNullValue());
-        assertEquals(0.0F, injected.getPrimitiveFloatNullValue());
-        assertEquals(0.0D, injected.getPrimitiveDoubleNullValue());
-        assertEquals('\u0000', injected.getPrimitiveCharacterNullValue());
-
     }
 
     @ApplicationScoped
     public static class Injected {
 
         @Inject
-        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private Boolean booleanNullValue;
+        @ConfigProperty(name = "boolean.nullvalue.default")
+        private Optional<Boolean> booleanNullValue;
 
         @Inject
-        @ConfigProperty(name = "boolean.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private boolean primitiveBooleanNullValue;
+        @ConfigProperty(name = "string.nullvalue.default")
+        private Optional<String> stringNullValue;
 
         @Inject
-        @ConfigProperty(name = "string.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private String stringNullValue;
+        @ConfigProperty(name = "long.nullvalue.default")
+        private Optional<Long> longNullValue;
 
         @Inject
-        @ConfigProperty(name = "long.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private Long longNullValue;
+        @ConfigProperty(name = "integer.nullvalue.default")
+        private Optional<Integer> integerNullValue;
 
         @Inject
-        @ConfigProperty(name = "long.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private long primitiveLongNullValue;
+        @ConfigProperty(name = "float.nullvalue.default")
+        private Optional<Float> floatNullValue;
 
         @Inject
-        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private Integer integerNullValue;
+        @ConfigProperty(name = "double.nullvalue.default")
+        private Optional<Double> doubleNullValue;
 
         @Inject
-        @ConfigProperty(name = "integer.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private int primitiveIntegerNullValue;
+        @ConfigProperty(name = "character.nullvalue.default")
+        private Optional<Character> characterNullValue;
 
         @Inject
-        @ConfigProperty(name = "float.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private Float floatNullValue;
+        @ConfigProperty(name = "short.nullvalue.default")
+        private Optional<Short> shortNullValue;
 
         @Inject
-        @ConfigProperty(name = "float.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private float primitiveFloatNullValue;
+        @ConfigProperty(name = "byte.nullvalue.default")
+        private Optional<Byte> byteNullValue;
 
         @Inject
-        @ConfigProperty(name = "double.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private Double doubleNullValue;
+        @ConfigProperty(name = "list.nullvalue.default")
+        private Optional<List<String>> listNullValue;
 
         @Inject
-        @ConfigProperty(name = "double.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private double primitiveDoubleNullValue;
+        @ConfigProperty(name = "class.nullvalue.default")
+        private Optional<Class> classNullValue;
 
         @Inject
-        @ConfigProperty(name = "character.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private Character characterNullValue;
+        @ConfigProperty(name = "url.nullvalue.default")
+        private Optional<URL> urlNullValue;
 
         @Inject
-        @ConfigProperty(name = "character.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private char primitiveCharacterNullValue;
-
-        @Inject
-        @ConfigProperty(name = "short.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private Short shortNullValue;
-
-        @Inject
-        @ConfigProperty(name = "short.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private short primitiveShortNullValue;
-
-        @Inject
-        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private Byte byteNullValue;
-
-        @Inject
-        @ConfigProperty(name = "byte.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private byte primitiveByteNullValue;
-
-        @Inject
-        @ConfigProperty(name = "list.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private List<String> listNullValue;
-
-        @Inject
-        @ConfigProperty(name = "class.nullvalue.default", defaultValue =  ConfigProperty.NULL_VALUE)
-        private Class classNullValue;
-
-        @Inject
-        @ConfigProperty(name = "url.nullvalue.default", defaultValue =  ConfigProperty.NULL_VALUE)
-        private URL urlNullValue;
-
-        @Inject
-        @ConfigProperty(name = "duration.nullvalue.default", defaultValue = ConfigProperty.NULL_VALUE)
-        private Duration durationNullValue;
+        @ConfigProperty(name = "duration.nullvalue.default")
+        private Optional<Duration> durationNullValue;
 
         public Boolean getBooleanNullValue() {
-            return booleanNullValue;
-        }
-
-        public boolean isPrimitiveBooleanNullValue() {
-            return primitiveBooleanNullValue;
+            return booleanNullValue.orElse(null);
         }
 
         public String getStringNullValue() {
-            return stringNullValue;
+            return stringNullValue.orElse(null);
         }
 
         public Long getLongNullValue() {
-            return longNullValue;
-        }
-
-        public long getPrimitiveLongNullValue() {
-            return primitiveLongNullValue;
+            return longNullValue.orElse(null);
         }
 
         public Integer getIntegerNullValue() {
-            return integerNullValue;
-        }
-
-        public int getPrimitiveIntegerNullValue() {
-            return primitiveIntegerNullValue;
+            return integerNullValue.orElse(null);
         }
 
         public Float getFloatNullValue() {
-            return floatNullValue;
-        }
-
-        public float getPrimitiveFloatNullValue() {
-            return primitiveFloatNullValue;
+            return floatNullValue.orElse(null);
         }
 
         public Double getDoubleNullValue() {
-            return doubleNullValue;
-        }
-
-        public double getPrimitiveDoubleNullValue() {
-            return primitiveDoubleNullValue;
+            return doubleNullValue.orElse(null);
         }
 
         public Character getCharacterNullValue() {
-            return characterNullValue;
-        }
-
-        public char getPrimitiveCharacterNullValue() {
-            return primitiveCharacterNullValue;
+            return characterNullValue.orElse(null);
         }
 
         public Short getShortNullValue() {
-            return shortNullValue;
-        }
-
-        public short getPrimitiveShortNullValue() {
-            return primitiveShortNullValue;
+            return shortNullValue.orElse(null);
         }
 
         public Byte getByteNullValue() {
-            return byteNullValue;
-        }
-
-        public byte getPrimitiveByteNullValue() {
-            return primitiveByteNullValue;
+            return byteNullValue.orElse(null);
         }
 
         public List<String> getListNullValue() {
-            return listNullValue;
+            return listNullValue.orElse(null);
         }
 
         public Class getClassNullValue() {
-            return classNullValue;
+            return classNullValue.orElse(null);
         }
 
         public URL getUrlNullValue() {
-            return urlNullValue;
+            return urlNullValue.orElse(null);
         }
 
         public Duration getDurationNullValue() {
-            return durationNullValue;
+            return durationNullValue.orElse(null);
         }
     }
 }

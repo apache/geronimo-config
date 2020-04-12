@@ -113,7 +113,7 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
         final ConfigProperty configProperty = annotated.getAnnotation(ConfigProperty.class);
         final String key = getConfigKey(ip, configProperty);
         final String defaultValue = configProperty.defaultValue();
-        final boolean canBeNull = ConfigProperty.NULL_VALUE.equals(defaultValue);
+        final boolean canBeNull = ConfigProperty.UNCONFIGURED_VALUE.equals(defaultValue);
         return toInstance(
                 annotated.getBaseType(),
                 key,
