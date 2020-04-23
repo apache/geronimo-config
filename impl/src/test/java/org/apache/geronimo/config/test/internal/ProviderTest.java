@@ -34,13 +34,14 @@ import org.testng.annotations.Test;
 
 public class ProviderTest extends Arquillian {
     private static final String SOME_KEY = "org.apache.geronimo.config.test.internal.somekey";
+	private static final String PROPERTY_FILE_KEY = "org.apache.geronimo.config.test.internal.filekey";
 
     @Deployment
     public static WebArchive deploy() {
         System.setProperty(SOME_KEY, "someval");
         JavaArchive testJar = ShrinkWrap
                 .create(JavaArchive.class, "configProviderTest.jar")
-                .addClasses(ProviderTest.class, SomeBean.class)
+                .addClasses(ProviderTest.class, SomeBean.class, PropertyFileBean.class)
                 .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
 
         return ShrinkWrap
@@ -49,6 +50,7 @@ public class ProviderTest extends Arquillian {
     }
 
     private @Inject SomeBean someBean;
+	private @Inject PropertyFileBean propertyFileBean;
 
 
     @Test
@@ -62,6 +64,11 @@ public class ProviderTest extends Arquillian {
         System.setProperty(SOME_KEY, "otherval");
         myconfig = someBean.getMyconfig();
         Assert.assertEquals(myconfig, "otherval");
+    }
+	
+	@Test
+    public void testDefaultPropertySourceConfigProvider() {
+        Assert.assertEquals(propertyFileBean.getMyfileconfig(), "fileval");
     }
 
 
@@ -90,6 +97,19 @@ public class ProviderTest extends Arquillian {
 
         public String getMyconfig() {
             return myconfig.get();
+        }
+
+    }
+	
+	@RequestScoped
+	 public static class PropertyFileBean {
+		
+		@Inject
+        @ConfigProperty(name=PROPERTY_FILE_KEY)
+        private Provider<String> myfileconfig;
+		
+		public String getMyfileconfig() {
+            return myfileconfig.get();
         }
 
     }
