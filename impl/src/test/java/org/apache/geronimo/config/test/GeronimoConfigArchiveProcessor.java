@@ -18,7 +18,7 @@ package org.apache.geronimo.config.test;
 
 import org.apache.geronimo.config.ConfigImpl;
 import org.apache.geronimo.config.DefaultConfigProvider;
-import org.apache.geronimo.config.cdi.ConfigInjectionProducer;
+import org.apache.geronimo.config.cdi.ConfigExtension;
 import org.apache.geronimo.config.configsource.BaseConfigSource;
 import org.apache.geronimo.config.converters.BooleanConverter;
 import org.eclipse.microprofile.config.spi.ConfigProviderResolver;
@@ -47,7 +47,7 @@ public class GeronimoConfigArchiveProcessor implements ApplicationArchiveProcess
                     .addPackage(ConfigImpl.class.getPackage())
                     .addPackage(BooleanConverter.class.getPackage())
                     .addPackage(BaseConfigSource.class.getPackage())
-                    .addPackage(ConfigInjectionProducer.class.getPackage())
+                    .addPackage(ConfigExtension.class.getPackage())
                     .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
                     .addAsServiceProvider(ConfigProviderResolver.class, DefaultConfigProvider.class);
             ((WebArchive) applicationArchive).addAsLibraries(configJar);

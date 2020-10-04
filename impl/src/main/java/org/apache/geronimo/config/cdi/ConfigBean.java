@@ -1,12 +1,12 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with
+ * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,11 +17,11 @@
 package org.apache.geronimo.config.cdi;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
+import static java.util.Collections.emptySet;
 
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,19 +32,26 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
 
 import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
 
-public class ConfigBean<T> implements Bean<T>, PassivationCapable {
+public class ConfigBean implements Bean<Config>, PassivationCapable {
+    private final Set<Type> types;
+    private final Set<Annotation> qualifiers;
+    private final String id;
+    private Config config;
 
-    private final String id = ConfigBean.class.getName();
+    ConfigBean() {
+        this.qualifiers = new HashSet<>(asList(DefaultLiteral.INSTANCE, AnyLiteral.INSTANCE));
+        this.types = new HashSet<>(asList(Config.class, Serializable.class));
+        this.id = ConfigBean.class.getName() + "[" + Config.class.getName() + "]";
+    }
 
-    private final Set<Annotation> qualifiers = singleton(new DefaultLiteral());
-
-    private final Set<Type> types = new HashSet<>(asList(Config.class, Object.class));
+    void init(final Config config) {
+        this.config = config;
+    }
 
     @Override
     public Set<InjectionPoint> getInjectionPoints() {
-        return Collections.emptySet();
+        return emptySet();
     }
 
     @Override
@@ -58,12 +65,12 @@ public class ConfigBean<T> implements Bean<T>, PassivationCapable {
     }
 
     @Override
-    public T create(final CreationalContext<T> context) {
-        return (T) ConfigProvider.getConfig();
+    public Config create(final CreationalContext<Config> context) {
+        return config;
     }
 
     @Override
-    public void destroy(final T instance, final CreationalContext<T> context) {
+    public void destroy(final Config instance, final CreationalContext<Config> context) {
         // no-op
     }
 
@@ -89,7 +96,7 @@ public class ConfigBean<T> implements Bean<T>, PassivationCapable {
 
     @Override
     public Set<Class<? extends Annotation>> getStereotypes() {
-        return Collections.emptySet();
+        return emptySet();
     }
 
     @Override

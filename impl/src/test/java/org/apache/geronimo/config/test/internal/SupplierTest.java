@@ -86,7 +86,7 @@ public class SupplierTest extends Arquillian{
         private Supplier<Integer> someIntValue;
 
         @Inject
-        @ConfigProperty(name="missing.key",defaultValue = SUPPLIER_DEFAULT_VALUE)
+        @ConfigProperty(name="missing.key", defaultValue = SUPPLIER_DEFAULT_VALUE)
         private Supplier<String> anotherconfig;
 
         @Inject

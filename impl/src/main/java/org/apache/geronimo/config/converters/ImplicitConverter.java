@@ -49,16 +49,16 @@ public abstract class ImplicitConverter {
             converter = hasConverterMethod(clazz, "valueOf", CharSequence.class);
         }
         if (converter == null) {
-            converter = hasConverterCt(clazz, String.class);
-        }
-        if (converter == null) {
-            converter = hasConverterCt(clazz, CharSequence.class);
-        }
-        if (converter == null) {
             converter = hasConverterMethod(clazz, "parse", String.class);
         }
         if (converter == null) {
             converter = hasConverterMethod(clazz, "parse", CharSequence.class);
+        }
+        if (converter == null) {
+            converter = hasConverterCt(clazz, String.class);
+        }
+        if (converter == null) {
+            converter = hasConverterCt(clazz, CharSequence.class);
         }
         return converter;
     }

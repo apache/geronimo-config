@@ -14,34 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.geronimo.config.cdi;
+package org.apache.geronimo.config.converters;
 
+import org.eclipse.microprofile.config.spi.Converter;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
+import javax.annotation.Priority;
+import javax.enterprise.inject.Vetoed;
 
 /**
- * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>
+ * @author <a href="mailto:danielsoro@apache.org">Daniel 'soro' Cunha</a>
  */
-@ApplicationScoped
-public class ConfigInjectionProducer {
 
-    private Config config;
+@Priority(1)
+@Vetoed
+public class ByteConverter implements Converter<Byte> {
 
-    @PostConstruct
-    void init() {
-        config = ConfigProvider.getConfig();
+    public static final ByteConverter INSTANCE = new ByteConverter();
+
+    @Override
+    public Byte convert(String value) {
+        return value != null ? Byte.valueOf(value) : null;
     }
-
-    @Produces
-    @ApplicationScoped
-    public Config createConfig() {
-        return config;
-    }
-
-
 }

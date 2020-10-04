@@ -16,11 +16,18 @@
  */
 package org.apache.geronimo.config.cdi;
 
-import org.apache.geronimo.config.ConfigImpl;
-import org.apache.geronimo.config.ConfigValueImpl;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;
@@ -33,18 +40,12 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Provider;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Supplier;
+
+import org.apache.geronimo.config.ConfigImpl;
+import org.apache.geronimo.config.ConfigValueImpl;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>
@@ -104,74 +105,116 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
 
     @Override
     public T create(CreationalContext<T> context) {
-        InjectionPoint ip = (InjectionPoint)bm.getInjectableReference(new ConfigInjectionPoint(this),context);
+        final InjectionPoint ip = (InjectionPoint)bm.getInjectableReference(new ConfigInjectionPoint(this),context);
         if (ip == null) {
             throw new IllegalStateException("Could not retrieve InjectionPoint");
         }
-        Annotated annotated = ip.getAnnotated();
-        ConfigProperty configProperty = annotated.getAnnotation(ConfigProperty.class);
-        String key = getConfigKey(ip, configProperty);
-        String defaultValue = configProperty.defaultValue();
+        final Annotated annotated = ip.getAnnotated();
+        final ConfigProperty configProperty = annotated.getAnnotation(ConfigProperty.class);
+        final String key = getConfigKey(ip, configProperty);
+        final String defaultValue = configProperty.defaultValue();
+        final boolean canBeNull = ConfigProperty.UNCONFIGURED_VALUE.equals(defaultValue);
+        return toInstance(
+                annotated.getBaseType(),
+                key,
+                canBeNull || ConfigExtension.isDefaultUnset(defaultValue) ? null : defaultValue,
+                true,
+                canBeNull);
+    }
 
-        if (annotated.getBaseType() instanceof ParameterizedType) {
-            ParameterizedType paramType = (ParameterizedType) annotated.getBaseType();
+    private T toInstance(final Type baseType, final String key,
+                         final String defaultValue, final boolean skipProviderLevel,
+                         final boolean acceptNull) {
+        if (baseType instanceof ParameterizedType) {
+            ParameterizedType paramType = (ParameterizedType) baseType;
             Type rawType = paramType.getRawType();
+            if (paramType.getActualTypeArguments().length == 0) {
+                throw new IllegalArgumentException("No argument to " + paramType);
+            }
 
-            Class clazzParam = (Class) paramType.getActualTypeArguments()[0]; //X TODO check type again, etc
+            Type arg = paramType.getActualTypeArguments()[0];
+            if (!Class.class.isInstance(arg)) {
+                if (ParameterizedType.class.isInstance(arg)) {
+                    ParameterizedType nested = ParameterizedType.class.cast(arg);
+                    if (rawType == Optional.class) {
+                        return (T) ofNullable(toInstance(nested, key, defaultValue, false, true));
+                    }
+                    if (rawType == Provider.class) {
+                        if (nested.getActualTypeArguments().length != 1) {
+                            throw new IllegalArgumentException("Invalid arguments for " + paramType);
+                        }
+                        return skipProviderLevel ?
+                                toInstance(nested, key, defaultValue, false, acceptNull) :
+                                (T) (Provider<?>) () -> toInstance(nested, key, defaultValue, false, true);
+                    }
+                    if (rawType == Supplier.class) {
+                        if (nested.getActualTypeArguments().length != 1) {
+                            throw new IllegalArgumentException("Invalid arguments for " + paramType);
+                        }
+                        return (T) (Supplier<?>) () -> toInstance(nested, key, defaultValue, false, true);
+                    }
+                }
+                throw new IllegalArgumentException("Unsupported multiple generics level: " + paramType);
+            }
+
+            Class clazzParam = (Class) arg;
 
             // handle Provider<T>
-            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Provider.class) && paramType.getActualTypeArguments().length == 1) {
-                return getConfigValue(key, defaultValue, clazzParam);
+            if (rawType instanceof Class && rawType == Provider.class && paramType.getActualTypeArguments().length == 1) {
+                return skipProviderLevel ?
+                        toInstance(clazzParam, key, defaultValue, false, acceptNull) :
+                        (T) (Provider<?>) () -> toInstance(clazzParam, key, defaultValue, false, true);
             }
 
             // handle Optional<T>
-            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Optional.class) && paramType.getActualTypeArguments().length == 1) {
+            if (rawType instanceof Class && rawType == Optional.class && paramType.getActualTypeArguments().length == 1) {
                 return (T) getConfig().getOptionalValue(key, clazzParam);
             }
 
-            if (rawType instanceof Class && ((Class) rawType).isAssignableFrom(Supplier.class) && paramType.getActualTypeArguments().length == 1) {
-                return (T) new ConfigSupplier(clazzParam, key, defaultValue, (ConfigImpl)getConfig());
+            if (rawType instanceof Class && rawType == Supplier.class && paramType.getActualTypeArguments().length == 1) {
+                return (T) (Supplier<?>) () -> toInstance(clazzParam, key, defaultValue, false, true);
             }
 
             if (Set.class.equals(rawType)) {
-                return (T) new HashSet(getList(key, clazzParam, defaultValue));
+                final List list = getList(key, clazzParam, defaultValue, acceptNull);
+                return list == null ? null : (T) new HashSet(list);
             }
             if (List.class.equals(rawType)) {
-                return (T) getList(key, clazzParam, defaultValue);
+                return (T) getList(key, clazzParam, defaultValue, acceptNull);
             }
+            throw new IllegalStateException("unhandled ConfigProperty");
         }
-        else {
-            Class clazz = (Class) annotated.getBaseType();
-            return getConfigValue(key, defaultValue, clazz);
-        }
-
-        throw new IllegalStateException("unhandled ConfigProperty");
+        Class clazz = (Class) baseType;
+        return getConfigValue(key, defaultValue, clazz, acceptNull);
     }
 
-    private List getList(String key, Class clazzParam, String defaultValue) {
-        ConfigValueImpl configValue = getConfig()
+    private List getList(final String key, final Class clazzParam, final String defaultValue, final boolean nullable) {
+        final ConfigImpl config = getConfig();
+        ConfigValueImpl configValue = config
                 .access(key)
                 .as(clazzParam)
                 .asList()
                 .evaluateVariables(true);
 
-        if (!ConfigExtension.isDefaultUnset(defaultValue))
+        if (defaultValue != null)
         {
             configValue.withStringDefault(defaultValue);
+        }
+        else if (nullable) // list default is emptyList, reset it for nullable values
+        {
+            configValue.withDefault(null);
         }
 
         return (List) configValue.get();
     }
 
-    private T getConfigValue(String key, String defaultValue, Class clazz) {
-        if (ConfigExtension.isDefaultUnset(defaultValue)) {
-            return (T) getConfig().getValue(key, clazz);
-        }
-        else {
-            Config config = getConfig();
+    private T getConfigValue(final String key, final String defaultValue, final Class clazz, final boolean canBeNull) {
+        final ConfigImpl config = getConfig();
+        if (canBeNull || defaultValue != null) {
             return (T) config.getOptionalValue(key, clazz)
-                    .orElse(((ConfigImpl) config).convert(defaultValue, clazz));
+                    .orElse(defaultValue == null ? null : config.convert(defaultValue, clazz));
         }
+        return (T) config.getValue(key, clazz);
     }
 
     /**

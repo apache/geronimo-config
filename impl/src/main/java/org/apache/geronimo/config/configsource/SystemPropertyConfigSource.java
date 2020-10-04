@@ -18,6 +18,7 @@
  */
 package org.apache.geronimo.config.configsource;
 
+import org.apache.geronimo.config.cdi.configsource.Reloadable;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 
 import javax.enterprise.inject.Typed;
@@ -35,18 +36,18 @@ import static java.util.stream.Collectors.toMap;
  */
 @Typed
 @Vetoed
-public class SystemPropertyConfigSource extends BaseConfigSource {
+public class SystemPropertyConfigSource extends BaseConfigSource implements Reloadable {
     private static final String COPY_PROPERTY = "org.apache.geronimo.config.configsource.SystemPropertyConfigSource.copy";
     private final Map<String, String> instance;
+    private final boolean shouldReload;
 
     public SystemPropertyConfigSource() {
         this(valueOf(System.getProperty(COPY_PROPERTY, "true")));
     }
 
     public SystemPropertyConfigSource(boolean copy) {
-        instance = copy ?
-                System.getProperties().stringPropertyNames().stream().collect(toMap(identity(), System::getProperty)) :
-                Map.class.cast(System.getProperties());
+        instance = load(copy);
+        shouldReload = copy;
         initOrdinal(400);
     }
 
@@ -63,5 +64,20 @@ public class SystemPropertyConfigSource extends BaseConfigSource {
     @Override
     public String getName() {
         return "system-properties";
+    }
+
+    @Override
+    public void reload() {
+        if (!shouldReload) {
+            return;
+        }
+        instance.clear();
+        instance.putAll(load(true));
+    }
+
+    private Map<String, String> load(final boolean copy) {
+        return copy ?
+                System.getProperties().stringPropertyNames().stream().collect(toMap(identity(), System::getProperty)) :
+                Map.class.cast(System.getProperties());
     }
 }
