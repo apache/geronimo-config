@@ -22,11 +22,13 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.apache.geronimo.config.test.testng.SystemPropertiesLeakProtector;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.testng.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.testng.Assert;
@@ -37,10 +39,12 @@ public class ProviderTest extends Arquillian {
 
     @Deployment
     public static WebArchive deploy() {
-        System.setProperty(SOME_KEY, "someval");
         JavaArchive testJar = ShrinkWrap
                 .create(JavaArchive.class, "configProviderTest.jar")
                 .addClasses(ProviderTest.class, SomeBean.class)
+                .addAsManifestResource(
+                        new StringAsset(SOME_KEY + "=someval\n"),
+                        "microprofile-config.properties")
                 .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
 
         return ShrinkWrap
@@ -53,6 +57,9 @@ public class ProviderTest extends Arquillian {
 
     @Test
     public void testConfigProvider() {
+        final SystemPropertiesLeakProtector fixer = new SystemPropertiesLeakProtector(); // lazy way to reset all the system props manipulated by this test
+        fixer.onStart(null);
+
         System.setProperty(SOME_KEY, "someval");
         String myconfig = someBean.getMyconfig();
         Assert.assertEquals(myconfig, "someval");
@@ -62,6 +69,8 @@ public class ProviderTest extends Arquillian {
         System.setProperty(SOME_KEY, "otherval");
         myconfig = someBean.getMyconfig();
         Assert.assertEquals(myconfig, "otherval");
+
+        fixer.onFinish(null);
     }
 
 

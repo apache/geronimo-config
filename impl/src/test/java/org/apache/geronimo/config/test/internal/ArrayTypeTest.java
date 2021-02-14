@@ -24,6 +24,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.testng.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.testng.Assert;
@@ -44,12 +45,14 @@ public class ArrayTypeTest extends Arquillian {
 
     @Deployment
     public static WebArchive deploy() {
-        System.setProperty(SOME_KEY, "1,2,3");
-        System.setProperty(SOME_OTHER_KEY, "1,2\\,3");
-        System.setProperty("placeholder", "4,5,6");
         JavaArchive testJar = ShrinkWrap
                 .create(JavaArchive.class, "arrayTest.jar")
                 .addClasses(ArrayTypeTest.class, SomeBean.class)
+                .addAsManifestResource(new StringAsset(
+                        SOME_KEY + "=1,2,3\n" +
+                                SOME_OTHER_KEY + "=1,2\\\\,3\n" +
+                                "placeholder=4,5,6\n"
+                ), "microprofile-config.properties")
                 .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
 
         return ShrinkWrap
@@ -63,47 +66,47 @@ public class ArrayTypeTest extends Arquillian {
     @Test
     public void testArraySetListInjection() {
         Assert.assertEquals(someBean.getStringValue(), "1,2,3");
-        Assert.assertEquals(someBean.getMyconfig(), new int[]{1,2,3});
-        Assert.assertEquals(someBean.getIntValues(), asList(1,2,3));
-        Assert.assertEquals(someBean.getIntSet(), new LinkedHashSet<>(asList(1,2,3)));
-        Assert.assertEquals(someBean.getIntSetDefault(), new LinkedHashSet<>(asList(1,2,3)));
-        Assert.assertEquals(someBean.getIntSetPlaceholderDefault(), new LinkedHashSet<>(asList(4,5,6)));
+        Assert.assertEquals(someBean.getMyconfig(), new int[]{1, 2, 3});
+        Assert.assertEquals(someBean.getIntValues(), asList(1, 2, 3));
+        Assert.assertEquals(someBean.getIntSet(), new LinkedHashSet<>(asList(1, 2, 3)));
+        Assert.assertEquals(someBean.getIntSetDefault(), new LinkedHashSet<>(asList(1, 2, 3)));
+        Assert.assertEquals(someBean.getIntSetPlaceholderDefault(), new LinkedHashSet<>(asList(4, 5, 6)));
     }
 
     @Test
     public void testListWithEscaping() {
-        Assert.assertEquals(someBean.getValues(), asList("1","2,3"));
+        Assert.assertEquals(someBean.getValues(), asList("1", "2,3"));
     }
 
     @RequestScoped
     public static class SomeBean {
 
         @Inject
-        @ConfigProperty(name=SOME_KEY)
+        @ConfigProperty(name = SOME_KEY)
         private int[] myconfig;
 
         @Inject
-        @ConfigProperty(name=SOME_KEY)
+        @ConfigProperty(name = SOME_KEY)
         private List<Integer> intValues;
 
         @Inject
-        @ConfigProperty(name=SOME_KEY)
+        @ConfigProperty(name = SOME_KEY)
         private Set<Integer> intSet;
 
         @Inject
-        @ConfigProperty(name=SOME_KEY + ".missing", defaultValue = "1,2,3")
+        @ConfigProperty(name = SOME_KEY + ".missing", defaultValue = "1,2,3")
         private Set<Integer> intSetDefault;
 
         @Inject
-        @ConfigProperty(name=SOME_KEY + ".missing", defaultValue = "${placeholder}")
+        @ConfigProperty(name = SOME_KEY + ".missing", defaultValue = "${placeholder}")
         private Set<Integer> intSetPlaceholderDefault;
 
         @Inject
-        @ConfigProperty(name=SOME_KEY)
+        @ConfigProperty(name = SOME_KEY)
         private String stringValue;
 
         @Inject
-        @ConfigProperty(name=SOME_OTHER_KEY)
+        @ConfigProperty(name = SOME_OTHER_KEY)
         private List<String> values;
 
         public Set<Integer> getIntSetPlaceholderDefault() {

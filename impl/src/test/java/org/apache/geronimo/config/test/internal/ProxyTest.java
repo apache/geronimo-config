@@ -34,6 +34,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.testng.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.testng.annotations.Test;
@@ -45,13 +46,19 @@ public class ProxyTest extends Arquillian {
 
     @Deployment
     public static WebArchive deploy() {
-        System.setProperty("prefix.val", "yes");
-        System.setProperty(LIST_KEY, "a,b,1");
-        System.setProperty(SOME_KEY, "yeah");
-        System.setProperty(SOME_OTHER_KEY, "123");
         JavaArchive testJar = ShrinkWrap
                 .create(JavaArchive.class, "PoxyTest.jar")
                 .addClasses(ProxyTest.class, SomeProxy.class, PrefixedSomeProxy.class)
+                .addAsManifestResource(
+                        new StringAsset("" +
+                                "interpolated=a,${my_int_property},${MY_STRING_PROPERTY},${my.string.property}\n" +
+                                "list.interpolated=a,${my_int_property},${MY_STRING_PROPERTY},${my.string.property}\n" +
+                                "my.string.property=haha\n" +
+                                        "prefix.val=yes\n" +
+                                        LIST_KEY + "=a,b,1\n" +
+                                        SOME_KEY + "=yeah\n" +
+                                        SOME_OTHER_KEY + "=123\n"
+                        ), "microprofile-config.properties")
                 .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
 
         return ShrinkWrap
@@ -94,6 +101,9 @@ public class ProxyTest extends Arquillian {
         assertEquals(0.0F, proxy.primitiveFloatNullValue());
         assertEquals(0.0D, proxy.primitiveDoubleNullValue());
         assertEquals('\u0000', proxy.primitiveCharacterNullValue());
+
+        assertEquals(proxy.interpolated(), "a,45,woohoo,haha");
+        assertEquals(proxy.listInterpolatedValue(), asList("a", "45", "woohoo", "haha"));
     }
 
     @Test
@@ -182,6 +192,12 @@ public class ProxyTest extends Arquillian {
 
         @ConfigProperty(name = "list.nullvalue.default")
         List<String> listNullValue();
+
+        @ConfigProperty(name = "list.interpolated")
+        List<String> listInterpolatedValue();
+
+        @ConfigProperty(name = "interpolated")
+        String interpolated();
 
         @ConfigProperty(name = "class.nullvalue.default")
         Class classNullValue();

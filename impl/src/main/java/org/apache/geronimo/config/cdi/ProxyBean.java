@@ -32,6 +32,7 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
 
+import org.apache.geronimo.config.ConfigImpl;
 import org.eclipse.microprofile.config.Config;
 
 public class ProxyBean<T> implements Bean<T>, PassivationCapable {
@@ -41,7 +42,7 @@ public class ProxyBean<T> implements Bean<T>, PassivationCapable {
     private final Set<Type> types;
     private final Set<Annotation> qualifiers;
     private final String id;
-    private Config config;
+    private ConfigImpl config;
 
     ProxyBean(final Class<T> api) {
         this.beanClass = api;
@@ -50,7 +51,7 @@ public class ProxyBean<T> implements Bean<T>, PassivationCapable {
         this.id = ProxyBean.class.getName() + "[" + api.getName() + "]";
     }
 
-    void init(final Config config) {
+    void init(final ConfigImpl config) {
         this.config = config;
     }
 

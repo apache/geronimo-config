@@ -16,6 +16,9 @@
     License.
 -->
 <suite name="microprofileconfig-TCK" verbose="2" configfailurepolicy="continue" >
+    <listeners>
+        <listener class-name="org.apache.geronimo.config.test.testng.SystemPropertiesLeakProtector" />
+    </listeners>
 
     <test name="Microprofile-config 1_4 TCK">
         <packages>

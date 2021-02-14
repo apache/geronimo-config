@@ -58,7 +58,7 @@
 
         <!-- OWB -->
         <owb.version>1.7.5</owb.version>
-        <owb2.version>2.0.7</owb2.version>
+        <owb2.version>2.0.20</owb2.version>
 
         <!-- Weld -->
         <cdi2-api.version>2.0</cdi2-api.version>

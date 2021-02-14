@@ -25,6 +25,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -210,11 +211,16 @@ public class ConfigInjectionBean<T> implements Bean<T>, PassivationCapable {
 
     private T getConfigValue(final String key, final String defaultValue, final Class clazz, final boolean canBeNull) {
         final ConfigImpl config = getConfig();
-        if (canBeNull || defaultValue != null) {
-            return (T) config.getOptionalValue(key, clazz)
-                    .orElse(defaultValue == null ? null : config.convert(defaultValue, clazz));
+        final T value = (T) config
+                .access(key)
+                .as(clazz)
+                .evaluateVariables(true)
+                .withDefault(defaultValue == null ? null : config.convert(defaultValue, clazz))
+                .get();
+        if (value != null || canBeNull) {
+            return value;
         }
-        return (T) config.getValue(key, clazz);
+        throw new NoSuchElementException("No configured value found for config key '" + key + "'");
     }
 
     /**

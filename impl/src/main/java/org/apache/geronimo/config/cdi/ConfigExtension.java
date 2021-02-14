@@ -18,6 +18,8 @@ package org.apache.geronimo.config.cdi;
 
 import static java.util.stream.Collectors.toList;
 
+import org.apache.geronimo.config.ConfigImpl;
+import org.apache.geronimo.config.DefaultConfigBuilder;
 import org.apache.geronimo.config.cdi.configsource.Reloadable;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -54,7 +56,7 @@ import java.util.stream.StreamSupport;
  * @author <a href="mailto:struberg@yahoo.de">Mark Struberg</a>
  */
 public class ConfigExtension implements Extension {
-    private Config config;
+    private ConfigImpl config;
 
     private static final Predicate<InjectionPoint> NOT_PROVIDERS = ip -> (ip.getType() instanceof Class) || (ip.getType() instanceof ParameterizedType && ((ParameterizedType)ip.getType()).getRawType() != Provider.class);
     private static final Map<Type, Type> REPLACED_TYPES = new HashMap<>();
@@ -78,7 +80,16 @@ public class ConfigExtension implements Extension {
     private ConfigBean configBean;
 
     public ConfigExtension() {
-        config = ConfigProvider.getConfig(); // ensure to store the ref the whole lifecycle, java gc is aggressive now
+        final Config raw = ConfigProvider.getConfig();
+        // ensure to store the ref the whole lifecycle, java gc is aggressive now
+        this.config = ConfigImpl.class.cast(ConfigImpl.class.isInstance(raw) ?
+                raw : // custom overrided config, unlikely but possible in wrong setups
+                new DefaultConfigBuilder()
+                        .forClassLoader(Thread.currentThread().getContextClassLoader())
+                        .addDefaultSources()
+                        .addDiscoveredSources()
+                        .addDiscoveredConverters()
+                        .build());
     }
 
     public void findProxies(@Observes ProcessAnnotatedType<?> pat) {

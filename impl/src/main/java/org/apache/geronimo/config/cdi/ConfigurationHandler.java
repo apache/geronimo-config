@@ -40,10 +40,10 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 public class ConfigurationHandler implements InvocationHandler {
-    private final Config config;
+    private final ConfigImpl config;
     private final Map<Method, MethodMeta> methodMetas;
 
-    ConfigurationHandler(final Config config, final Class<?> api) {
+    ConfigurationHandler(final ConfigImpl config, final Class<?> api) {
         this.config = config;
 
         final String prefix = ofNullable(api.getAnnotation(ConfigProperty.class))
@@ -175,8 +175,12 @@ public class ConfigurationHandler implements InvocationHandler {
             }
         }
 
-        Object read(final Config config) {
-            final Optional optionalValue = config.getOptionalValue(key, lookupType);
+        Object read(final ConfigImpl config) {
+            final Optional optionalValue = ofNullable(config
+                    .access(key)
+                    .as(lookupType)
+                    .evaluateVariables(true)
+                    .get());
             if (optional) {
                 return processOptional(optionalValue, config);
             }
