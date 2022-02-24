@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.geronimo.config</groupId>
         <artifactId>geronimo-config</artifactId>
-        <version>1.2.3-SNAPSHOT</version>
+        <version>1.2.3</version>
     </parent>
 
     <artifactId>geronimo-config-impl</artifactId>
@@ -96,7 +96,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package></Export-Package>
+                        <Export-Package />
                         <_contract>*;effective:='active'</_contract>
                         <_define-contract><![CDATA[
                             osgi.contract;
